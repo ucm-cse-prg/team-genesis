@@ -13,3 +13,4 @@ wheels/
 .vscode/settings.json
 .coverage
 coverage.lcov
+.hypothesis

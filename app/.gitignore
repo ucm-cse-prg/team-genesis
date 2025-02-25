@@ -1,0 +1,16 @@
+uri.py
+__pycache__
+
+.env
+.venv
+env/
+venv/
+ENV/
+env.bak/
+venv.bak/
+
+# ignore student_data/ and output/ except the .gitkeeps
+student_data/*
+!student_data/.gitkeep
+output/*
+!output/.gitkeep
