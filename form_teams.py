@@ -486,19 +486,21 @@ def plot_histogram(
     fig, ax1 = plt.subplots(figsize=(12, 6))
     ax2 = ax1.twinx()
 
-    bars1 = ax1.bar(
+    ax1.bar(
         x - width / 2,
         list(skills_percent.values()),
         width,
         label=r"% of required skills fulfilled",
         color="gold",
-        alpha=0.7,
     )
     ax1.set_xlabel("Project Teams")
     ax1.set_ylabel("% of Skills Fulfliled by Assigned Teammembers")
+    ax1.set_yticks(np.arange(0, 110, 10), minor=True)
+    ax1.set_axisbelow(True)
+    ax1.grid(axis="y", which="major", color="black", linestyle="--", linewidth=1)
+    ax1.grid(axis="y", which="minor", color="gray", linestyle="--", linewidth=0.5)
     ax1.set_ylim(0, 106)
 
-    # add proj skills avgs
     for i, proj in enumerate(bins):
         cur_avg = classwide_skill_frequency[proj]
         ax1.scatter(
@@ -510,19 +512,17 @@ def plot_histogram(
             label="Global Avg Skills" if i == 0 else "",
         )
 
-    bars2 = ax2.bar(
+    ax2.bar(
         x + width / 2,
         list(avg_prefs[0].values()),
         width,
         label="Avg preference score of teams",
         color="#003366",
-        alpha=0.8,
     )
     ax2.set_ylabel("Average Preference Score of Teams (1-5)")
     ax2.set_ylim(0, 5.3)
-    ax2.set_yticks(np.arange(0, 6, 1))
+    ax2.set_yticks(np.arange(0, 5.5, 0.5), minor=True)
 
-    # add project pref avgs
     for i, proj in enumerate(bins):
         cur_avg = avg_prefs[1][proj]
         ax2.scatter(
@@ -537,14 +537,8 @@ def plot_histogram(
     ax1.set_xticks(x)
     ax1.set_xticklabels(bins, rotation=30, ha="right")
 
-    for y in range(0, 120, 20):
-        ax1.axhline(y=y, color="darkgray", linestyle="--", linewidth=0.5, alpha=0.5)
-
-    autolabel_histogram(ax1, list(bars1))
-    autolabel_histogram(ax2, list(bars2))
     plt.title(" ")
     fig.legend(loc="upper center", bbox_to_anchor=(0.5, 1.01), ncol=4)
-    # plt.show()
     plt.tight_layout()
     fig.savefig(histogram_filename, dpi=1000)
 
