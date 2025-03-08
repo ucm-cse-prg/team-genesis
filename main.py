@@ -14,19 +14,19 @@ if __name__ == "__main__":
     #     print(f"Connection failed\n{e}")
 
     SEED = 42
-    form_teams(
-        "student_data/2024-01-Spring-CSE-MASTER.xlsx",
-        "student_data/student_skills.json",
-        "student_data/PROJECT_SKILLS_S2024.json",
-        5,
-        "student_data/SKILLS_LIST_2024.txt",
-        # client,
-        formed_teams_filename="output/formed_teams.csv",
-        team_pref_scores_filename="output/team_pref_scores.csv",
-        histogram_filename="output/metrics_per_team_histogram_labless.png",
-        option=3,
-        seed=SEED,
-    )
+    # form_teams(
+    #     "student_data/2024-01-Spring-CSE-MASTER.xlsx",
+    #     "student_data/student_skills.json",
+    #     "student_data/PROJECT_SKILLS_S2024.json",
+    #     5,
+    #     "student_data/SKILLS_LIST_2024.txt",
+    #     # client,
+    #     formed_teams_filename="output/formed_teams.csv",
+    #     team_pref_scores_filename="output/team_pref_scores.csv",
+    #     histogram_filename="output/metrics_per_team_histogram_labless.png",
+    #     option=3,
+    #     seed=SEED,
+    # )
     form_teams(
         "student_data/2024-01-Spring-CSE-MASTER.xlsx",
         "student_data/student_skills.json",
