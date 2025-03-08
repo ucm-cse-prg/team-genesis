@@ -304,6 +304,7 @@ def score_pair(
         skill_score += (
             student.skills_ratings[matched_skill] * skills_weights[matched_skill]
         )
+    # skill_score /= len(matching_skills) if len(matching_skills) > 0 else 1
 
     return preference_score, skill_score
 
@@ -480,6 +481,19 @@ def plot_histogram(
     Returns:
         None
     """
+    # print stddevs and average of all team preference scores and % of skills fulfille
+    fulfilled_average: float = np.mean(list(skills_percent.values()))
+    fulfilled_stdev: float = np.std(list(skills_percent.values()))
+    # write average team preference and stdev
+    preference_average: float = np.mean(list(avg_prefs[0].values()))
+    preference_stdev: float = np.std(list(avg_prefs[0].values()))
+    print(
+        f"Average % of fulfilled skills: {fulfilled_average:.2f} ± {fulfilled_stdev:.2f}"
+    )
+    print(
+        f"Average preference score of teams: {preference_average:.2f} ± {preference_stdev:.2f}"
+    )
+
     bins = list(avg_prefs[0].keys())
     x = np.arange(len(bins))
     width = 0.4
@@ -760,6 +774,14 @@ def form_teams(
     skip_labs: bool = opt == 3
     lab_team_sizes: dict[LabName, TeamSizes] = teams_distribution_options[opt]
 
+    lab_team_sizes = {
+        "02L": [5, 5, 4, 4, 3],
+        "03L": [5, 5, 5, 4, 4, 3],
+        "04L": [5, 5, 5, 5, 4, 4],
+        "05L": [5, 5, 5, 5, 4],
+        "06L": [5, 5, 5, 5, 5],
+    }
+
     # PHASE 2: PARSING AND INITIALIZING DATA
     with open(skills_file, "r") as f:
         SKILLS = f.read().replace(" ", "").splitlines()
@@ -851,6 +873,16 @@ def form_teams(
         project_df,
     )
 
+    # for testing purposes, randomly assign projects to labs, ensuring not to exceed team capacity
+    # labs = {lab: len(lab_team_sizes[lab]) for lab in lab_team_sizes.keys()}
+    # for project in projects:
+    #     random_lab = random.choice(list(labs.keys()))
+    #     project.assigned_lab = random_lab
+    #     labs[random_lab] -= 1
+    #     if labs[random_lab] == 0:
+    #         labs.pop(random_lab)
+
+
     # average preference scores of all students for each project
     # needed in case there are no labs, regardless of skip labs later saved in data collection
     classwide_preferences: dict[ProjectName, float] = {}
@@ -891,20 +923,40 @@ def form_teams(
         cur_projects: list[Project] = [
             project for project in projects if project.assigned_lab == lab
         ]
-        assign_students_to_projects(cur_students, cur_projects, PREF_SCALAR)
+        # # randomly assign students to projects
+        # for student in cur_students:
+        #     random_project = random.choice(cur_projects)
+        #     student.assigned_project = random_project.name
+        #     random_project.assigned_students.append(student)
+        #     if len(random_project.assigned_students) == random_project.team_capacity:
+        #         cur_projects.pop(cur_projects.index(random_project))
 
-        # collect data for phase 4
-        formed_teams_dict, team_pref_scores = collect_assignment_data(
-            cur_students, cur_projects, formed_teams_dict, team_pref_scores
-        )
+        # assign_students_to_projects(cur_students, cur_projects, PREF_SCALAR)
 
-    # PHASE 4: SAVING AND PLOTTING RESULTS
-    save_assignment_data(
-        team_pref_scores,
-        formed_teams_dict,
-        team_pref_scores_filename,
-        formed_teams_filename,
-    )
+    #     # # collect data for phase 4
+    #     # formed_teams_dict, team_pref_scores = collect_assignment_data(
+    #     #     cur_students, cur_projects, formed_teams_dict, team_pref_scores
+    #     # )
+
+    with open("assignments.json", "r") as f:
+        assignments = json.load(f)
+    student_emails_dict = {student.email: student for student in students}
+    project_names = {project.name: project for project in projects}
+    # assignments has key project name, value list of student emails
+    for project_name, student_emails in assignments.items():
+        for email in student_emails:
+            student = student_emails_dict[email]
+            student.assigned_project = project_name
+            project = project_names[project_name]
+            project.assigned_students.append(student)
+
+    # # PHASE 4: SAVING AND PLOTTING RESULTS
+    # save_assignment_data(
+    #     team_pref_scores,
+    #     formed_teams_dict,
+    #     team_pref_scores_filename,
+    #     formed_teams_filename,
+    # )
 
     # average preference scores of assigned team members for each project
     avg_assigned_prefs: dict[ProjectName, float] = {}
