@@ -1,0 +1,142 @@
+Average skills fulfilled: 76.0, Stdev: 32.42185174520782
+Average team preference: 4.214705882352941, Stdev: 0.7128576926465744
+HIL (301), Lab 04L
+Skills: MACHINELEARNING
+Student, Email - Relevant Skills
+Joseph Tadrous, jtadrous@ucmerced.edu -  - Preference for this project: 5
+Kyle Shyffer, kshyffer@ucmerced.edu -  - Preference for this project: 5
+Ethan Chou, echou10@ucmerced.edu -  - Preference for this project: 4
+Chris Hernandez, chernandez312@ucmerced.edu -  - Preference for this project: 4
+John Tran, jtran306@ucmerced.edu -  - Preference for this project: 3
+
+UST (302), Lab 02L
+Skills: MACHINELEARNING
+Student, Email - Relevant Skills
+Cristian Galarza Torres, cgalarzatorres@ucmerced.edu -  - Preference for this project: 5
+Raul Pena Verduzco, rpena12@ucmerced.edu -  - Preference for this project: 3
+Spencer Stafford, sstafford4@ucmerced.edu -  - Preference for this project: 2
+Yuepeng Lee, ylee104@ucmerced.edu -  - Preference for this project: 2
+Anthony Rojas, arojas51@ucmerced.edu -  - Preference for this project: 1
+
+CONw (303), Lab 04L
+Skills: MACHINELEARNING, PYTHON, WEBDEVELOPMENT
+Student, Email - Relevant Skills
+Victor Aguele, vaguele@ucmerced.edu - Python, Webdevelopment - Preference for this project: 5
+Jeffrey Peng, jpeng18@ucmerced.edu - Python, Webdevelopment - Preference for this project: 5
+Brian Gao, bgao5@ucmerced.edu - Python, Webdevelopment - Preference for this project: 5
+Kristina Wong, kwong111@ucmerced.edu - Python, Webdevelopment - Preference for this project: 5
+
+CONc (304), Lab 04L
+Skills: WEBDEVELOPMENT
+Student, Email - Relevant Skills
+Tanush Maddala, tmaddala@ucmerced.edu -  - Preference for this project: 5
+Harshul Satija, hsatija@ucmerced.edu - Webdevelopment - Preference for this project: 4
+Kirthana Kavali, kkavali@ucmerced.edu - Webdevelopment - Preference for this project: 4
+Christopher Huang, chuang74@ucmerced.edu -  - Preference for this project: 2
+
+DLat (305), Lab 03L
+Skills: CLOUDPLATFORMS, PYTHON, SQLDATABASES, WEBDEVELOPMENT
+Student, Email - Relevant Skills
+Jessie Mendoza, jmendoza260@ucmerced.edu - Cloudplatforms, Python, Sqldatabases, Webdevelopment - Preference for this project: 5
+Mark Araza, maraza@ucmerced.edu - Python, Sqldatabases, Webdevelopment - Preference for this project: 5
+Tanner Jackson, tjackson33@ucmerced.edu - Python, Sqldatabases, Webdevelopment - Preference for this project: 5
+Shrivaikunth Krishnakumar, skrishnakumar@ucmerced.edu - Python, Sqldatabases, Webdevelopment - Preference for this project: 5
+Fernando Campos Chavez, fcamposchavez@ucmerced.edu - Python, Webdevelopment - Preference for this project: 5
+
+DLpa (306), Lab 03L
+Skills: CLOUDPLATFORMS, PYTHON, SQLDATABASES, WEBDEVELOPMENT
+Student, Email - Relevant Skills
+Hikaru Kurusu, hkurusu@ucmerced.edu - Python, Webdevelopment - Preference for this project: 5
+Psalm Bautista, pbautista6@ucmerced.edu - Python, Sqldatabases, Webdevelopment - Preference for this project: 4
+Nick Mount, nmount@ucmerced.edu - Python - Preference for this project: 5
+Quan Nguyen, qnguyen52@ucmerced.edu - Python, Sqldatabases, Webdevelopment - Preference for this project: 4
+
+DLm (307), Lab 03L
+Skills: PYTHON, SQLDATABASES, WEBDEVELOPMENT
+Student, Email - Relevant Skills
+Fernando Martinez, fmartinez48@ucmerced.edu - Python, Sqldatabases, Webdevelopment - Preference for this project: 4
+Sergio Angulo, sangulo2@ucmerced.edu - Python, Sqldatabases, Webdevelopment - Preference for this project: 4
+Ivan Vargas, ivargas8@ucmerced.edu - Python, Webdevelopment - Preference for this project: 4
+Garret Castro, gcastro35@ucmerced.edu - Python, Webdevelopment - Preference for this project: 3
+
+SW (308), Lab 04L
+Skills: CLOUDPLATFORMS, MACHINELEARNING, PYTHON, SQLDATABASES, WEBDEVELOPMENT
+Student, Email - Relevant Skills
+Evan Lu, elu37@ucmerced.edu - Machinelearning, Python, Webdevelopment - Preference for this project: 5
+Nawfal Abdul Khader, nabdulkhader@ucmerced.edu - Machinelearning, Python, Webdevelopment - Preference for this project: 5
+Yash Dhillon, ydhillon2@ucmerced.edu - Machinelearning, Python - Preference for this project: 5
+Emily Puente, epuente2@ucmerced.edu - Python, Webdevelopment - Preference for this project: 5
+
+WDC (309), Lab 03L
+Skills: SQLDATABASES, WEBDEVELOPMENT
+Student, Email - Relevant Skills
+Flor Aguilar, faguilar12@ucmerced.edu - Webdevelopment - Preference for this project: 5
+Alex Sanchez Rubio, asanchezrubio@ucmerced.edu - Sqldatabases, Webdevelopment - Preference for this project: 4
+Amrita Vilku, avilku@ucmerced.edu -  - Preference for this project: 5
+Anirud Vorugu, avorugu@ucmerced.edu - Webdevelopment - Preference for this project: 3
+
+MSr (310), Lab 02L
+Skills: PYTHON, SQLDATABASES, WEBDEVELOPMENT
+Student, Email - Relevant Skills
+Kobe Kimoto-Ross, kkimoto-ross@ucmerced.edu - Python, Sqldatabases, Webdevelopment - Preference for this project: 5
+Raghav Sinha, rsinha8@ucmerced.edu - Python, Sqldatabases, Webdevelopment - Preference for this project: 5
+Kirath Pandal, kpandal@ucmerced.edu - Python, Sqldatabases, Webdevelopment - Preference for this project: 5
+Ethan Hom, ehom2@ucmerced.edu - Python, Webdevelopment - Preference for this project: 4
+Marcelo Ramirez, mramirez282@ucmerced.edu - Python - Preference for this project: 4
+
+TID (311), Lab 02L
+Skills: C/C++, PYTHON, SQLDATABASES, WEBDEVELOPMENT
+Student, Email - Relevant Skills
+Jacob Myung, jmyung2@ucmerced.edu - C/c++, Python, Sqldatabases, Webdevelopment - Preference for this project: 5
+Jacob Thompson, jthompson45@ucmerced.edu - C/c++, Python, Webdevelopment - Preference for this project: 5
+Sakayt Singh, ssingh270@ucmerced.edu - C/c++, Python, Sqldatabases - Preference for this project: 5
+Cameron Fabela, cfabela2@ucmerced.edu - C/c++, Python - Preference for this project: 5
+
+OWL (312), Lab 04L
+Skills: CLOUDPLATFORMS, MACHINELEARNING, WEBDEVELOPMENT
+Student, Email - Relevant Skills
+Pranav Chakilam, pchakilam@ucmerced.edu - Machinelearning, Webdevelopment - Preference for this project: 5
+Luis Fujarte, lfujarte@ucmerced.edu - Machinelearning - Preference for this project: 4
+German De La Luz, gdelaluz3@ucmerced.edu - Machinelearning, Webdevelopment - Preference for this project: 3
+Nevin Jom, njom@ucmerced.edu - Webdevelopment - Preference for this project: 1
+
+MSp (313), Lab 02L
+Skills: MACHINELEARNING, PYTHON, SQLDATABASES, WEBDEVELOPMENT
+Student, Email - Relevant Skills
+Ryan Milstrey, rmilstrey@ucmerced.edu - Machinelearning, Python - Preference for this project: 4
+Ethan On, eon@ucmerced.edu - Python, Sqldatabases, Webdevelopment - Preference for this project: 4
+Edmond Lee, elee288@ucmerced.edu - Python, Webdevelopment - Preference for this project: 3
+Salvador Nunez, snunez31@ucmerced.edu - Python - Preference for this project: 3
+
+GI (314), Lab 02L
+Skills: CLOUDPLATFORMS, PYTHON, SQLDATABASES, WEBDEVELOPMENT
+Student, Email - Relevant Skills
+Andrew Reed, areed13@ucmerced.edu - Python, Webdevelopment - Preference for this project: 4
+James Odanga, jodanga@ucmerced.edu - Cloudplatforms, Python, Webdevelopment - Preference for this project: 3
+Adrian Navarro, anavarro59@ucmerced.edu - Webdevelopment - Preference for this project: 4
+Kanishka Verose, kverose@ucmerced.edu - Cloudplatforms, Python, Webdevelopment - Preference for this project: 3
+
+I2G (315), Lab 03L
+Skills: APPDEVELOPMENT, CLOUDPLATFORMS
+Student, Email - Relevant Skills
+Cheska Cinderella Friend, cfriend5@ucmerced.edu - Appdevelopment - Preference for this project: 5
+Kyle Sulit, ksulit@ucmerced.edu - Appdevelopment - Preference for this project: 5
+Genesis Vazquez, gvazquez16@ucmerced.edu -  - Preference for this project: 5
+Jason Yuen, jyuen11@ucmerced.edu - Appdevelopment - Preference for this project: 4
+
+X10e (316), Lab 03L
+Skills: CLOUDPLATFORMS, MACHINELEARNING, SQLDATABASES, WEBDEVELOPMENT
+Student, Email - Relevant Skills
+Karina Zamora, kzamora12@ucmerced.edu - Sqldatabases, Webdevelopment - Preference for this project: 5
+Aadi Sharma, asharma72@ucmerced.edu - Cloudplatforms, Machinelearning, Sqldatabases, Webdevelopment - Preference for this project: 4
+Nebyou Abebe, nabebe2@ucmerced.edu - Machinelearning, Sqldatabases, Webdevelopment - Preference for this project: 4
+Hans Guillen, hguillen@ucmerced.edu - Machinelearning, Sqldatabases, Webdevelopment - Preference for this project: 3
+
+SEM (317), Lab 03L
+Skills: MACHINELEARNING, PYTHON, WEBDEVELOPMENT
+Student, Email - Relevant Skills
+Kavin Rajasekaran, krajasekaran@ucmerced.edu - Machinelearning, Python, Webdevelopment - Preference for this project: 5
+Ralph Sulay, rsulay@ucmerced.edu - Machinelearning, Python - Preference for this project: 5
+Berrydal Moshe, bmoshe@ucmerced.edu - Machinelearning, Python - Preference for this project: 5
+Christine Doan, cdoan16@ucmerced.edu - Python, Webdevelopment - Preference for this project: 5
+

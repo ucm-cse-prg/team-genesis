@@ -228,7 +228,7 @@ def assign_projects_to_labs(
 
         lab = lab_names[lab_index]
         if lab_project_count[lab] == lab_team_count[lab]:
-            lab_index += 1 if lab_index != 4 else -4
+            lab_index += 1 if lab_index != 2 else -2
             continue
 
         project = lab_preferences_order[lab].pop(0)
@@ -548,8 +548,10 @@ def plot_histogram(
             label="Global Avg Preferences" if i == 0 else "",
         )
 
+    anonymized: list[str] = [f"P{i+1}" for i in range(len(bins))]
+
     ax1.set_xticks(x)
-    ax1.set_xticklabels(bins, rotation=30, ha="right")
+    ax1.set_xticklabels(anonymized, rotation=30, ha="right")
 
     plt.title(" ")
     fig.legend(loc="upper center", bbox_to_anchor=(0.5, 1.01), ncol=4)
@@ -741,7 +743,7 @@ def form_teams(
     # PHASE 1: ASSIGNING TEAM SIZES TO LABS
     student_df = pd.read_excel(
         student_data_file,
-        sheet_name="SURVEY NODU+STAT",
+        sheet_name="MASTER",
         index_col=None,
     )
 
@@ -775,11 +777,9 @@ def form_teams(
     lab_team_sizes: dict[LabName, TeamSizes] = teams_distribution_options[opt]
 
     lab_team_sizes = {
-        "02L": [5, 5, 4, 4, 3],
-        "03L": [5, 5, 5, 4, 4, 3],
-        "04L": [5, 5, 5, 5, 4, 4],
-        "05L": [5, 5, 5, 5, 4],
-        "06L": [5, 5, 5, 5, 5],
+        "02L": [5, 5, 4, 4, 4],
+        "03L": [5, 4, 4, 4, 4, 4, 4],
+        "04L": [5, 4, 4, 4, 4],
     }
 
     # PHASE 2: PARSING AND INITIALIZING DATA
@@ -852,7 +852,7 @@ def form_teams(
 
     students: list[Student] = []
     # last row is nan, first row is headers
-    for i in range(len(student_df) - 2):
+    for i in range(len(student_df)):
         s = Student(student_df, projects, i, SKILLS)
         if skip_labs:
             s.lab = first_labname
@@ -873,7 +873,7 @@ def form_teams(
         project_df,
     )
 
-    # for testing purposes, randomly assign projects to labs, ensuring not to exceed team capacity
+    # # for testing purposes, randomly assign projects to labs, ensuring not to exceed team capacity
     # labs = {lab: len(lab_team_sizes[lab]) for lab in lab_team_sizes.keys()}
     # for project in projects:
     #     random_lab = random.choice(list(labs.keys()))
@@ -931,24 +931,24 @@ def form_teams(
         #     if len(random_project.assigned_students) == random_project.team_capacity:
         #         cur_projects.pop(cur_projects.index(random_project))
 
-        # assign_students_to_projects(cur_students, cur_projects, PREF_SCALAR)
+        assign_students_to_projects(cur_students, cur_projects, PREF_SCALAR)
 
     #     # # collect data for phase 4
     #     # formed_teams_dict, team_pref_scores = collect_assignment_data(
     #     #     cur_students, cur_projects, formed_teams_dict, team_pref_scores
     #     # )
 
-    with open("assignments.json", "r") as f:
-        assignments = json.load(f)
-    student_emails_dict = {student.email: student for student in students}
-    project_names = {project.name: project for project in projects}
-    # assignments has key project name, value list of student emails
-    for project_name, student_emails in assignments.items():
-        for email in student_emails:
-            student = student_emails_dict[email]
-            student.assigned_project = project_name
-            project = project_names[project_name]
-            project.assigned_students.append(student)
+    # with open("assignments.json", "r") as f:
+    #     assignments = json.load(f)
+    # student_emails_dict = {student.email: student for student in students}
+    # project_names = {project.name: project for project in projects}
+    # # assignments has key project name, value list of student emails
+    # for project_name, student_emails in assignments.items():
+    #     for email in student_emails:
+    #         student = student_emails_dict[email]
+    #         student.assigned_project = project_name
+    #         project = project_names[project_name]
+    #         project.assigned_students.append(student)
 
     # # PHASE 4: SAVING AND PLOTTING RESULTS
     # save_assignment_data(
@@ -1022,6 +1022,35 @@ def form_teams(
         project_skill_frequency[project.name] = fulfilled_skill_percentage / len(
             required_skills
         )
+
+    # based on info from project skills file
+    team_numbers: dict[str, int] = {
+        project: acronym_team_numbers[project] for project in project_skills
+    }
+
+    # write data to results.txt
+    with open("results_skill.txt", "w") as f:
+        # group by project
+        # sort projects by team number
+        # write skills fulfilled average and stdev
+        fulfilled_average: float = np.mean(list(project_fulfilled_skills_percent.values()))
+        fulfilled_stdev: float = np.std(list(project_fulfilled_skills_percent.values()))
+        # write average team preference and stdev
+        preference_average: float = np.mean(list(avg_assigned_prefs.values()))
+        preference_stdev: float = np.std(list(avg_assigned_prefs.values()))
+        f.write(f"Average skills fulfilled: {fulfilled_average}, Stdev: {fulfilled_stdev}\n")
+        f.write(f"Average team preference: {preference_average}, Stdev: {preference_stdev}\n")
+        projects = sorted(projects, key=lambda project: team_numbers[project.name])
+        for project in projects:
+            f.write(f"{project.name} ({team_numbers[project.name]}), Lab {project.assigned_lab}\n")
+            f.write(f"Skills: {', '.join([skill for skill in project.skills_dict if project.skills_dict[skill] == 1])}\n")
+            f.write("Student, Email - Relevant Skills\n")
+            for student in project.assigned_students:
+                f.write(f"{student.fn} {student.ln}, {student.email}")
+                # for the sake of writing, uncapitalize the skills except for first letter
+                f.write(f" - {', '.join([skill[0]+skill[1:].lower() for skill in student.skills_ratings if student.skills_ratings[skill] > 2 and project.skills_dict[skill] == 1])}")
+                f.write(f" - Preference for this project: {student.preferences[project.name]}\n")
+            f.write("\n")
 
     if histogram_filename:
         plot_histogram(
