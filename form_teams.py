@@ -504,11 +504,11 @@ def plot_histogram(
         x - width / 2,
         list(skills_percent.values()),
         width,
-        label=r"% of required skills fulfilled",
+        label=r"Project Skills Fulfilled",
         color="gold",
     )
-    ax1.set_xlabel("Project Teams")
-    ax1.set_ylabel("% of Skills Fulfliled by Assigned Teammembers")
+    ax1.set_xlabel("Project Teams", fontsize=15)
+    ax1.set_ylabel("Project Skills Fulfilled", fontsize=15)
     ax1.set_yticks(np.arange(0, 110, 10), minor=True)
     ax1.set_axisbelow(True)
     ax1.grid(axis="y", which="major", color="black", linestyle="--", linewidth=1)
@@ -523,17 +523,17 @@ def plot_histogram(
             color="orange",
             marker="o",
             s=60,
-            label="Global Avg Skills" if i == 0 else "",
+            label="Global Average Skill Frequency" if i == 0 else "",
         )
 
     ax2.bar(
         x + width / 2,
         list(avg_prefs[0].values()),
         width,
-        label="Avg preference score of teams",
+        label="Student Preference Toward Assignment",
         color="#003366",
     )
-    ax2.set_ylabel("Average Preference Score of Teams (1-5)")
+    ax2.set_ylabel("Average Preference Score of Teams (1-5)", fontsize=15)
     ax2.set_ylim(0, 5.3)
     ax2.set_yticks(np.arange(0, 5.5, 0.5), minor=True)
 
@@ -545,17 +545,18 @@ def plot_histogram(
             color="lightblue",
             marker="D",
             s=60,
-            label="Global Avg Preferences" if i == 0 else "",
+            label="Global Average Project Preferences" if i == 0 else "",
         )
 
+    anonymized = [f"P{i}" for i in range(1, len(skills_percent) + 1)]
+
     ax1.set_xticks(x)
-    ax1.set_xticklabels(bins, rotation=30, ha="right")
+    ax1.set_xticklabels(anonymized, rotation=30, ha="right", fontsize=12)
 
     plt.title(" ")
-    fig.legend(loc="upper center", bbox_to_anchor=(0.5, 1.01), ncol=4)
+    # fig.legend(loc="upper center", ncol=4, bbox_to_anchor=(0.5, 1.01), fontsize=24, framealpha=1)
     plt.tight_layout()
-    fig.savefig(histogram_filename, dpi=1000)
-
+    fig.savefig(histogram_filename, dpi=300)
 
 def clean_data_for_silly_mongo(item: Any) -> Any:
     """
@@ -873,7 +874,7 @@ def form_teams(
         project_df,
     )
 
-    # for testing purposes, randomly assign projects to labs, ensuring not to exceed team capacity
+    # # for testing purposes, randomly assign projects to labs, ensuring not to exceed team capacity
     # labs = {lab: len(lab_team_sizes[lab]) for lab in lab_team_sizes.keys()}
     # for project in projects:
     #     random_lab = random.choice(list(labs.keys()))
@@ -931,24 +932,24 @@ def form_teams(
         #     if len(random_project.assigned_students) == random_project.team_capacity:
         #         cur_projects.pop(cur_projects.index(random_project))
 
-        # assign_students_to_projects(cur_students, cur_projects, PREF_SCALAR)
+        assign_students_to_projects(cur_students, cur_projects, PREF_SCALAR)
 
     #     # # collect data for phase 4
     #     # formed_teams_dict, team_pref_scores = collect_assignment_data(
     #     #     cur_students, cur_projects, formed_teams_dict, team_pref_scores
     #     # )
 
-    with open("assignments.json", "r") as f:
-        assignments = json.load(f)
-    student_emails_dict = {student.email: student for student in students}
-    project_names = {project.name: project for project in projects}
-    # assignments has key project name, value list of student emails
-    for project_name, student_emails in assignments.items():
-        for email in student_emails:
-            student = student_emails_dict[email]
-            student.assigned_project = project_name
-            project = project_names[project_name]
-            project.assigned_students.append(student)
+    # with open("assignments.json", "r") as f:
+    #     assignments = json.load(f)
+    # student_emails_dict = {student.email: student for student in students}
+    # project_names = {project.name: project for project in projects}
+    # # assignments has key project name, value list of student emails
+    # for project_name, student_emails in assignments.items():
+    #     for email in student_emails:
+    #         student = student_emails_dict[email]
+    #         student.assigned_project = project_name
+    #         project = project_names[project_name]
+    #         project.assigned_students.append(student)
 
     # # PHASE 4: SAVING AND PLOTTING RESULTS
     # save_assignment_data(
