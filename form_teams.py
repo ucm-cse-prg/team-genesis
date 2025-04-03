@@ -114,26 +114,31 @@ class Student:
         scraped_skills = (
             re.sub(r"\([^)]*\)", "", df.at[i, "Skills"])
             .upper()
-            .replace(" ", "")
             .split(",")
         )
         proficiencies = (
             re.sub(r"\([^)]*\)", "", str(df.at[i, "Proficient"]))
             .upper()
-            .replace(" ", "")
-            .split(",")
         )
-        # longest skill is 6 words long, so if there are any more, delete it because they didn't fill out the survey properly
-        for proficiency in proficiencies:
-            if len(proficiency.split()) > 6:
-                proficiencies = []
-                break
+        parsed_proficient_skills = []
         self.skills_ratings = {key: 0 for key in skills}
         for skill in scraped_skills:
-            if skill.strip() in self.skills_ratings:
-                self.skills_ratings[skill.strip()] = 3
-                if skill.strip() in proficiencies:
-                    self.skills_ratings[skill.strip()] = 4
+            skill=skill.strip()
+            if skill == "WEB DEVELOPMENT":
+                skill = "WEB DEV"
+            if skill == "MACHINE LEARNING":
+                skill = "ML"
+            if skill == "APP DEVELOPMENT":
+                skill = "APP DEV"
+            if "DATABASES" in skill:
+                skill = "DATA MANAGEMENT"
+            if skill in self.skills_ratings:
+                self.skills_ratings[skill] = 3
+                if skill in proficiencies:
+                    parsed_proficient_skills.append(skill)
+        if len(parsed_proficient_skills) <= 5:
+            for skill in parsed_proficient_skills:
+                self.skills_ratings[skill] = 8
 
         self.preferences: dict[str, int] = {}
         for project in projects:
@@ -228,7 +233,7 @@ def assign_projects_to_labs(
 
         lab = lab_names[lab_index]
         if lab_project_count[lab] == lab_team_count[lab]:
-            lab_index += 1 if lab_index != 4 else -4
+            lab_index += 1 if lab_index != 5 else -5
             continue
 
         project = lab_preferences_order[lab].pop(0)
@@ -279,7 +284,7 @@ def score_pair(
         total_project_skills += 1
 
         if all(
-            student.skills_ratings[skill] <= 1 for student in project.assigned_students
+            student.skills_ratings[skill] <= 5 for student in project.assigned_students
         ):
             unfulfilled_skills.append(skill)
 
@@ -304,7 +309,6 @@ def score_pair(
         skill_score += (
             student.skills_ratings[matched_skill] * skills_weights[matched_skill]
         )
-    # skill_score /= len(matching_skills) if len(matching_skills) > 0 else 1
 
     return preference_score, skill_score
 
@@ -346,6 +350,10 @@ def assign_students_to_projects(
                     max_pref_score = scores[0]
                 if score == max_score:  # break ties based on pref score
                     if scores[0] > max_pref_score:
+                        max_score = score
+                        max_pair = (student, project)
+                        max_pref_score = scores[0]
+                    if scores[0] == max_pref_score and random.choice([True, False]):
                         max_score = score
                         max_pair = (student, project)
                         max_pref_score = scores[0]
@@ -481,18 +489,6 @@ def plot_histogram(
     Returns:
         None
     """
-    # print stddevs and average of all team preference scores and % of skills fulfille
-    fulfilled_average: float = np.mean(list(skills_percent.values()))
-    fulfilled_stdev: float = np.std(list(skills_percent.values()))
-    # write average team preference and stdev
-    preference_average: float = np.mean(list(avg_prefs[0].values()))
-    preference_stdev: float = np.std(list(avg_prefs[0].values()))
-    print(
-        f"Average % of fulfilled skills: {fulfilled_average:.2f} ± {fulfilled_stdev:.2f}"
-    )
-    print(
-        f"Average preference score of teams: {preference_average:.2f} ± {preference_stdev:.2f}"
-    )
 
     bins = list(avg_prefs[0].keys())
     x = np.arange(len(bins))
@@ -662,6 +658,7 @@ def autolabel_histogram(ax: plt.Axes, bars: list[plt.Rectangle]) -> None:
             ha="center",
             va="bottom",
             fontsize=7,
+            rotation=30,
         )
 
 
@@ -707,8 +704,8 @@ def size_teams_with_labs(
 
 def form_teams(
     student_data_file: str,
-    student_skills_file: str,
-    project_skills_file: str,
+    # student_skills_file: str,
+    # project_skills_file: str,
     base_team_size: int,
     skills_file: str,
     client: Optional[pymongo.MongoClient] = None,
@@ -742,7 +739,7 @@ def form_teams(
     # PHASE 1: ASSIGNING TEAM SIZES TO LABS
     student_df = pd.read_excel(
         student_data_file,
-        sheet_name="SURVEY NODU+STAT",
+        sheet_name="MASTER",
         index_col=None,
     )
 
@@ -775,17 +772,9 @@ def form_teams(
     skip_labs: bool = opt == 3
     lab_team_sizes: dict[LabName, TeamSizes] = teams_distribution_options[opt]
 
-    lab_team_sizes = {
-        "02L": [5, 5, 4, 4, 3],
-        "03L": [5, 5, 5, 4, 4, 3],
-        "04L": [5, 5, 5, 5, 4, 4],
-        "05L": [5, 5, 5, 5, 4],
-        "06L": [5, 5, 5, 5, 5],
-    }
-
     # PHASE 2: PARSING AND INITIALIZING DATA
     with open(skills_file, "r") as f:
-        SKILLS = f.read().replace(" ", "").splitlines()
+        SKILLS = f.read().splitlines()
 
     project_df = pd.read_excel(
         student_data_file,
@@ -796,76 +785,128 @@ def form_teams(
     projects: list[Project] = [
         Project(name, SKILLS) for name in project_df.columns[:-4]
     ]
-
-    # project duplication, skill insertion
-    """ this file should have 3 attributes     "presentation_skills": team numbers with a list of corresponding skills
-     "duplicates": list of projects with the same preference scores and names
-     "acronym_team_numbers": list of project acronyms and the corresponding team number,
-         if project was duplicated, name is appended with _1 for the first instance and
-         _2 for the second
-    """
-    with open(project_skills_file, "r") as f:
-        data = json.load(f)
-    duplicates: list[str] = data["duplicates"]
-    presentation_skills: dict[int, list[str]] = {
-        int(key): value for key, value in data["presentation_skills"].items()
-    }
-    acronym_team_numbers: dict[str, int] = {
-        key: value for key, value in data["acronym_team_numbers"].items()
-    }
-
+    project_df_2 = pd.read_excel(
+        student_data_file,
+        sheet_name="PROJECTS",
+        index_col="Project Code",
+    )
+    # skills column in project_df_2 is a list of skills separated by commas and a space
     for project in projects:
-        if project.name in duplicates:
-            projects.append(copy.deepcopy(project))
-            project.name = f"{project.name}_1"
-            projects[-1].name = f"{projects[-1].name}_2"
+        try: 
+            for skill in project_df_2.at[project.name, "Skills"].split(", "):
+                project.skills_dict[skill.upper()] = 1
+        except KeyError:
+            for skill in project_df_2.at[f"{project.name}1", "Skills"].split(", "):
+                project.skills_dict[skill.upper()] = 1
 
-    project_skills: dict[str, list[str]] = {}
-    for project in projects:
-        if project.original_name in duplicates:
-            project_skills[project.name] = list(
-                set(
-                    presentation_skills[
-                        acronym_team_numbers[f"{project.original_name}_1"]
-                    ]
-                    + presentation_skills[
-                        acronym_team_numbers[f"{project.original_name}_2"]
-                    ]
-                )
-            )
-            continue
-        project_skills[project.name] = presentation_skills[
-            acronym_team_numbers[project.original_name]
-        ]
+    # for project in projects:
+    #     print(project.name)
+    #     pprint(project.skills_dict)
 
-    for project in projects:
-        project.skills_dict = {skill: 0 for skill in SKILLS}
-        ### skills from the json file are formatted with spaces, but not in the skill object
-        for skill in project_skills[project.name]:
-            project.skills_dict[skill.replace(" ", "")] = 1
+    # # project duplication, skill insertion
+    # """ this file should have 3 attributes     "presentation_skills": team numbers with a list of corresponding skills
+    #  "duplicates": list of projects with the same preference scores and names
+    #  "acronym_team_numbers": list of project acronyms and the corresponding team number,
+    #      if project was duplicated, name is appended with _1 for the first instance and
+    #      _2 for the second
+    # """
+    # with open(project_skills_file, "r") as f:
+    #     data = json.load(f)
+    # duplicates: list[str] = data["duplicates"]
+    # presentation_skills: dict[int, list[str]] = {
+    #     int(key): value for key, value in data["presentation_skills"].items()
+    # }
+    # acronym_team_numbers: dict[str, int] = {
+    #     key: value for key, value in data["acronym_team_numbers"].items()
+    # }
 
-    # remove project excess projects
-    team_count = 0
-    for lab in lab_team_sizes.keys():
-        team_count += len(lab_team_sizes[lab])
-    while len(projects) > team_count:
-        projects.pop()
+    # for project in projects:
+    #     if project.name in duplicates:
+    #         projects.append(copy.deepcopy(project))
+    #         project.name = f"{project.name}_1"
+    #         projects[-1].name = f"{projects[-1].name}_2"
+
+    # project_skills: dict[str, list[str]] = {}
+    # for project in projects:
+    #     if project.original_name in duplicates:
+    #         project_skills[project.name] = list(
+    #             set(
+    #                 presentation_skills[
+    #                     acronym_team_numbers[f"{project.original_name}_1"]
+    #                 ]
+    #                 + presentation_skills[
+    #                     acronym_team_numbers[f"{project.original_name}_2"]
+    #                 ]
+    #             )
+    #         )
+    #         continue
+    #     project_skills[project.name] = presentation_skills[
+    #         acronym_team_numbers[project.original_name]
+    #     ]
+
+    # for project in projects:
+    #     project.skills_dict = {skill: 0 for skill in SKILLS}
+    #     ### skills from the json file are formatted with spaces, but not in the skill object
+    #     for skill in project_skills[project.name]:
+    #         project.skills_dict[skill.replace(" ", "")] = 1
+
+    # # remove project excess projects
+    # team_count = 0
+    # for lab in lab_team_sizes.keys():
+    #     team_count += len(lab_team_sizes[lab])
+    # while len(projects) > team_count:
+    #     projects.pop()
 
     students: list[Student] = []
     # last row is nan, first row is headers
-    for i in range(len(student_df) - 2):
+    for i in range(len(student_df)):
         s = Student(student_df, projects, i, SKILLS)
         if skip_labs:
             s.lab = first_labname
-
-        # student_data/student_skills.json has key student name and value list of skills that should have a rating of 5
-        with open(student_skills_file, "r") as f:
-            student_skills = json.load(f)
-        for skill in student_skills[s.fn + " " + s.ln]:
-            formatted_skill = skill.replace(" ", "").upper()
-            s.skills_ratings[formatted_skill] = 5
+        # student_data/student_skills.csv has column Name which is fn+ln
+        # other columns are skills, find the row with the same name as the student
+        # then iterate through each column, if column name is in a skill, add it to the student's skills with the corresponding value from the row
+        # with open(student_skills_file, "r") as f:
+        #     student_skills = csv.reader(f)
+        # # find columns with least edit distance from each skill (doesn't match up exactly)
+        # import editdistance
+        # skill_columns = next(student_skills)
+        # skill_columns = [skill.strip() for skill in skill_columns]
+        # student_skills_list = list(student_skills)
+        # for j, skill in enumerate(SKILLS):
+        #     min_distance = 100
+        #     min_index = 0
+        #     for k, column in enumerate(skill_columns):
+        #         distance = editdistance.eval(skill, column)
+        #         if distance < min_distance:
+        #             min_distance = distance
+        #             min_index = k
+        #     s.skills_ratings[skill] = int(student_skills_list[i][min_index])
 
         students.append(s)
+    
+    # columns are Name, Email, LabSection, then skills
+    student_df_2 = pd.read_excel(
+        student_data_file,
+        sheet_name="survey_results3",
+        index_col=None,
+    )
+    for i in range(len(student_df_2)):
+        student = students[i]
+        for skill in SKILLS:
+            student.skills_ratings[skill] = int(float(student_df_2.at[i, skill])*2)
+
+    to_duplicate: list[str] = ["X10eML", "X10eLLM", "SOE", "SEM", "WD", "MSt", "UNi", "BART", "AGR", "HIL", "I2Gs", "I2Gn", "MSp", "SW", "OWL"]  
+    for project in projects:
+        if project.name in to_duplicate:
+            for student in students:
+                student.preferences[f"{project.name}1"] = student.preferences[project.name]
+                student.preferences[f"{project.name}2"] = student.preferences[project.name]
+                del student.preferences[project.name]
+
+            projects.append(copy.deepcopy(project))
+            project.name = f"{project.name}1"
+            projects[-1].name = f"{projects[-1].name}2"
 
     assign_projects_to_labs(
         projects,
@@ -873,16 +914,6 @@ def form_teams(
         {key: len(value) for key, value in lab_team_sizes.items()},
         project_df,
     )
-
-    # # for testing purposes, randomly assign projects to labs, ensuring not to exceed team capacity
-    # labs = {lab: len(lab_team_sizes[lab]) for lab in lab_team_sizes.keys()}
-    # for project in projects:
-    #     random_lab = random.choice(list(labs.keys()))
-    #     project.assigned_lab = random_lab
-    #     labs[random_lab] -= 1
-    #     if labs[random_lab] == 0:
-    #         labs.pop(random_lab)
-
 
     # average preference scores of all students for each project
     # needed in case there are no labs, regardless of skip labs later saved in data collection
@@ -915,7 +946,7 @@ def form_teams(
     team_pref_scores: dict[str, list[int]] = defaultdict(list)
 
     # PHASE 3: ASSIGNING STUDENTS TO PROJECTS
-    PREF_SCALAR: int = 10
+    PREF_SCALAR: int = 20
     for lab in lab_team_sizes.keys():
         # group students and project by lab
         cur_students: list[Student] = [
@@ -924,40 +955,20 @@ def form_teams(
         cur_projects: list[Project] = [
             project for project in projects if project.assigned_lab == lab
         ]
-        # # randomly assign students to projects
-        # for student in cur_students:
-        #     random_project = random.choice(cur_projects)
-        #     student.assigned_project = random_project.name
-        #     random_project.assigned_students.append(student)
-        #     if len(random_project.assigned_students) == random_project.team_capacity:
-        #         cur_projects.pop(cur_projects.index(random_project))
-
         assign_students_to_projects(cur_students, cur_projects, PREF_SCALAR)
 
-    #     # # collect data for phase 4
-    #     # formed_teams_dict, team_pref_scores = collect_assignment_data(
-    #     #     cur_students, cur_projects, formed_teams_dict, team_pref_scores
-    #     # )
+        # collect data for phase 4
+        formed_teams_dict, team_pref_scores = collect_assignment_data(
+            cur_students, cur_projects, formed_teams_dict, team_pref_scores
+        )
 
-    # with open("assignments.json", "r") as f:
-    #     assignments = json.load(f)
-    # student_emails_dict = {student.email: student for student in students}
-    # project_names = {project.name: project for project in projects}
-    # # assignments has key project name, value list of student emails
-    # for project_name, student_emails in assignments.items():
-    #     for email in student_emails:
-    #         student = student_emails_dict[email]
-    #         student.assigned_project = project_name
-    #         project = project_names[project_name]
-    #         project.assigned_students.append(student)
-
-    # # PHASE 4: SAVING AND PLOTTING RESULTS
-    # save_assignment_data(
-    #     team_pref_scores,
-    #     formed_teams_dict,
-    #     team_pref_scores_filename,
-    #     formed_teams_filename,
-    # )
+    # PHASE 4: SAVING AND PLOTTING RESULTS
+    save_assignment_data(
+        team_pref_scores,
+        formed_teams_dict,
+        team_pref_scores_filename,
+        formed_teams_filename,
+    )
 
     # average preference scores of assigned team members for each project
     avg_assigned_prefs: dict[ProjectName, float] = {}
@@ -985,7 +996,7 @@ def form_teams(
         team_skills = set()
         for student_skill in cur_skills:
             for skill, rating in student_skill.items():
-                if rating > 1:
+                if rating >= 6:
                     team_skills.add(skill)
 
         fulfilled_skills = required_skills.intersection(team_skills)
@@ -1008,7 +1019,7 @@ def form_teams(
     skill_frequency: dict[str, float] = {SKILLS[i]: 0.0 for i in range(len(SKILLS))}
     for student in students:
         for skill, rating in student.skills_ratings.items():
-            if rating > 1:
+            if rating >= 6:
                 skill_frequency[skill] += 1
     for skill in skill_frequency:
         skill_frequency[skill] = (skill_frequency[skill] / len(students)) * 100
@@ -1034,6 +1045,29 @@ def form_teams(
             ),
             histogram_filename,
         )
+
+    # in project_df_2, there is a column "Team #"
+    # make a dict mapping project names to team numbers
+    team_numbers: dict[str, int] = {
+        project: project_df_2.at[project, "Team #"] for project in project_df_2.index
+    }
+
+    # write data to results.txt
+    with open("results_skill.txt", "w") as f:
+        # group by project
+        # sort projects by team number
+        projects = sorted(projects, key=lambda project: team_numbers[project.name])
+        for project in projects:
+            f.write(f"{project.name} ({team_numbers[project.name]}), Lab {project.assigned_lab}\n")
+            f.write(f"Skills: {', '.join([skill for skill in project.skills_dict if project.skills_dict[skill] == 1])}\n")
+            f.write("Student, Email - Relevant Skills\n")
+            for student in project.assigned_students:
+                f.write(f"{student.fn} {student.ln}, {student.email}")
+                # for the sake of writing, uncapitalize the skills except for first letter
+                f.write(f" - {', '.join([skill[0]+skill[1:].lower() for skill in student.skills_ratings if student.skills_ratings[skill] > 5 and project.skills_dict[skill] == 1])}")
+                f.write(f" - Preference for this project: {student.preferences[project.name]}\n")
+            f.write("\n")
+
 
     if not client:
         return

@@ -28,11 +28,11 @@ if __name__ == "__main__":
     #     seed=SEED,
     # )
     form_teams(
-        "student_data/2024-01-Spring-CSE-MASTER.xlsx",
-        "student_data/student_skills.json",
-        "student_data/PROJECT_SKILLS_S2024.json",
+        "student_data/2025-01-Spring-CSE-MASTER.xlsx",
+        # "student_data/survey_results.csv",
+        # "PROJECT_SKILLS_S2024.json",
         5,
-        "student_data/SKILLS_LIST_2024.txt",
+        "student_data/SKILLS_LIST_S25.txt",
         # client,
         formed_teams_filename="output/formed_teams.csv",
         team_pref_scores_filename="output/team_pref_scores.csv",
