@@ -36,7 +36,7 @@ if __name__ == "__main__":
         # client,
         formed_teams_filename="output/formed_teams.csv",
         team_pref_scores_filename="output/team_pref_scores.csv",
-        histogram_filename="output/metrics_per_team_histogram_with_labs.png",
+        histogram_filename="output/metrics_per_team_histogram_with_labs_public.png",
         option=2,
         seed=SEED,
     )
