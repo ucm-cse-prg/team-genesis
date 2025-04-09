@@ -1,0 +1,25 @@
+services:
+  mongo:
+    container_name: mongo
+    networks:
+      - app-network
+    image: mongo:latest
+    ports:
+      - "27017:27017"
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: root
+      MONGO_INITDB_ROOT_PASSWORD: changeme 
+
+  app:
+    build: .
+    volumes:
+      - ./app:/app
+    ports:
+      - "8000:8000"
+    environment:
+      MONGODB_URL: mongodb://root:changeme@mongodb:27017
+      PORT: 8000
+    depends_on:
+      - mongo
+    networks:
+      - app-network

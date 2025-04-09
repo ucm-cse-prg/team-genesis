@@ -1,0 +1,80 @@
+[project]
+name = "fastapi-app"
+version = "0.0.1"
+description = "Add your description here"
+readme = "README.md"
+requires-python = ">=3.13"
+dependencies = [
+    "beanie>=1.29.0",
+    "fastapi[standard]>=0.115.10",
+    "pydantic-settings>=2.8.1",
+    "uvicorn>=0.34.0",
+]
+
+[dependency-groups]
+dev = [
+    "asgi-lifespan>=2.1.0",
+    "faker>=36.1.1",
+    "httpx>=0.28.1",
+    "mypy>=1.15.0",
+    "pytest>=8.3.4",
+    "pytest-asyncio>=0.25.3",
+    "pytest-cov>=6.0.0",
+    "ruff>=0.9.9",
+]
+
+[project.scripts]
+fastapi-app = "app.cli:app"
+
+[tool.uv]
+package = true
+
+[tool.mypy]
+plugins = ["pydantic.mypy"]
+
+[tool.pytest.ini_options]
+pythonpath = ["app"]
+testpaths = ["tests"]
+addopts = "--cov --cov-report lcov"
+asyncio_mode = "auto"
+filterwarnings = [
+    'ignore:cgi is deprecated:DeprecationWarning',
+    "ignore:'crypt' is deprecated:DeprecationWarning",
+    'ignore:pkg_resources is deprecated:DeprecationWarning',
+    "ignore::pytest.PytestCollectionWarning",
+]
+
+[tool.semantic_release]
+version_toml = ["pyproject.toml:project.version"]
+branch = "main"
+major_on_zero = true
+upload_to_pypi = false
+upload_to_release = true
+commit_version_number = true
+tag_commit = true
+changelog_file = "CHANGELOG.md"
+build_command = "python -m pip install uv && python -m uv build"
+allowed_tags = [
+    "build",
+    "chore",
+    "ci",
+    "docs",
+    "feat",
+    "fix",
+    "perf",
+    "style",
+    "refactor",
+    "test",
+    "revert",
+]
+minor_tags = ["feat", "build"]
+patch_tags = [
+    "chore",
+    "ci",
+    "fix",
+    "perf",
+    "style",
+    "refactor",
+    "test",
+    "revert",
+]

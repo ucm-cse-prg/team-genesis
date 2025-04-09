@@ -1,0 +1,10 @@
+FastAPI
+beanie[odm]
+typer
+uvicorn
+pytest
+pytest-asyncio
+mypy
+pydantic
+motor
+docker-compose
