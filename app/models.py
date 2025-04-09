@@ -5,8 +5,8 @@ These Models form the backbone of the application, providing a way to validate a
 Request/response schemas as well as database documents are derived from these models.
 """
 
-from typing import dict, List, Optional
 from __future__ import annotations
+from typing import dict, List, Optional
 from pydantic import BaseModel, Field, EmailStr 
 
 
