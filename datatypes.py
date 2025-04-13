@@ -1,5 +1,7 @@
 import re
 import pandas as pd
+from typing import TypeAlias
+
 
 class Project:
     """A project that students will be assigned to.
@@ -15,6 +17,7 @@ class Project:
         skills_dict (dict[str, int]): A dictionary mapping skills to 1 if the skill is
             required for the project and 0 otherwise. Contains all possible skills
             across all projects as keys.
+        team_number (int): The number of the team that the project is assigned to.
     """
 
     def __init__(self, name: str, skills: list[str]) -> None:
@@ -37,6 +40,16 @@ class Project:
         self.team_capacity = 0
 
         self.skills_dict = {key: 0 for key in skills}
+
+        self.team_number: int = 0
+
+    def __str__(self) -> str:
+        """Returns a string representation of the project.
+
+        Returns:
+            str: A string representation of the project.
+        """
+        return f"Project {self.name} ({self.team_number}) - {self.assigned_lab} - {len(self.assigned_students)} students"
 
 
 class Student:
@@ -83,19 +96,12 @@ class Student:
         self.email = df.at[i, "Email"]
         self.lab = df.at[i, "Lab"]
 
-        scraped_skills = (
-            re.sub(r"\([^)]*\)", "", df.at[i, "Skills"])
-            .upper()
-            .split(",")
-        )
-        proficiencies = (
-            re.sub(r"\([^)]*\)", "", str(df.at[i, "Proficient"]))
-            .upper()
-        )
+        scraped_skills = re.sub(r"\([^)]*\)", "", df.at[i, "Skills"]).upper().split(",")
+        proficiencies = re.sub(r"\([^)]*\)", "", str(df.at[i, "Proficient"])).upper()
         parsed_proficient_skills = []
         self.skills_ratings = {key: 0 for key in skills}
         for skill in scraped_skills:
-            skill=skill.strip()
+            skill = skill.strip()
             if skill == "WEB DEVELOPMENT":
                 skill = "WEB DEV"
             if skill == "MACHINE LEARNING":
@@ -115,3 +121,14 @@ class Student:
         self.preferences: dict[str, int] = {}
         for project in projects:
             self.preferences[project.name] = df.at[i, project.original_name]
+
+    def __str__(self) -> str:
+        """Returns a string representation of the student.
+
+        Returns:
+            str: A string representation of the student.
+        """
+        return f"{self.fn} {self.ln} ({self.lab}) - {self.assigned_project}"
+
+LabName: TypeAlias = str
+"""Format is 02L, 03L, etc."""
