@@ -129,6 +129,9 @@ def assign_students(students: list[Student], projects: list[Project], base_team_
         None
     """
 
+    if seed is not None:
+        random.seed(seed)
+
     lab_populations: dict[LabName, int] = {}
     for student in students:
         if student.lab not in lab_populations:
