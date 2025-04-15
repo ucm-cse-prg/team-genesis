@@ -1,5 +1,7 @@
 uri.py
 __pycache__
+.hypothesis/
+.coverage
 
 .env
 .venv
