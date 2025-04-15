@@ -10,17 +10,19 @@ class Project:
         name (str): The unique name of the project.
         original_name (str): The name of the project without the duplication tag ("_1"
             or "_2").
-        assigned_lab (str): The lab that the project is assigned to (02L, 03L, etc.).
-        assigned_students (list[Student]): A list of students assigned to the
-            project.
-        team_capacity (int): The number of students that can be assigned to the project.
         skills_dict (dict[str, int]): A dictionary mapping skills to 1 if the skill is
             required for the project and 0 otherwise. Contains all possible skills
             across all projects as keys.
         team_number (int): The number of the team that the project is assigned to.
+        assigned_lab (str): The lab that the project is assigned to (02L, 03L, etc.).
+        assigned_students (list[Student]): A list of students assigned to the
+            project.
+        team_capacity (int): The number of students that can be assigned to the project.
     """
 
-    def __init__(self, name: str, skills: list[str]) -> None:
+    def __init__(
+        self, name: str, team_number: int, skills_dict: dict[str, int]
+    ) -> None:
         """Initializes the instance based on the name and possible skills.
 
         original_name is initialized as described in the class docstring. All other
@@ -28,28 +30,21 @@ class Project:
 
         Args:
             name (str): The unique name of the project.
-            skills (list[str]): A list of possible skills for the project, all values
-                initalized to zero.
+            team_number (int): The number of the team working on the project.
+            skills_dict (dict[str, int]): A dictionary mapping skills to 1 if the skill
+                is required for the project and 0 otherwise. Contains all possible skills
+                across all projects as keys.
         Returns:
             None
         """
         self.name = name
         self.original_name = name.split("_")[0]
+        self.skills_dict = skills_dict
+        self.team_number = team_number
+
         self.assigned_lab = ""
         self.assigned_students: list[Student] = []
         self.team_capacity = 0
-
-        self.skills_dict = {key: 0 for key in skills}
-
-        self.team_number: int = 0
-
-    def __str__(self) -> str:
-        """Returns a string representation of the project.
-
-        Returns:
-            str: A string representation of the project.
-        """
-        return f"Project {self.name} ({self.team_number}) - {self.assigned_lab} - {len(self.assigned_students)} students"
 
 
 class Student:
@@ -122,13 +117,6 @@ class Student:
         for project in projects:
             self.preferences[project.name] = df.at[i, project.original_name]
 
-    def __str__(self) -> str:
-        """Returns a string representation of the student.
-
-        Returns:
-            str: A string representation of the student.
-        """
-        return f"{self.fn} {self.ln} ({self.lab}) - {self.assigned_project}"
 
 LabName: TypeAlias = str
 """Format is 02L, 03L, etc."""

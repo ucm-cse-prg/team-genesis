@@ -56,24 +56,22 @@ def parse_data(
         index_col="Project Code",
     )
 
-    projects: list[Project] = [
-        Project(name, SKILLS) for name in project_df.columns[:-4]
-    ]
+    projects: list[Project] = []
 
-    for project in projects:
-        try:
-            project.team_number = project_df_2.at[project.name, "Team #"]
-        except KeyError:
-            project.team_number = project_df_2.at[f"{project.name}1", "Team #"]
-    
-    # skills column in project_df_2 is a list of skills separated by commas and a space
-    for project in projects:
-        try:
-            for skill in project_df_2.at[project.name, "Skills"].split(", "):
-                project.skills_dict[skill.upper()] = 1
-        except KeyError:
-            for skill in project_df_2.at[f"{project.name}1", "Skills"].split(", "):
-                project.skills_dict[skill.upper()] = 1
+    for name in project_df.columns[:-4]:
+        # Determine correct key for team and skills
+        key = name if name in project_df_2.index else f"{name}1"
+
+        team_number = project_df_2.at[key, "Team #"]
+        skills_list: list[str] = project_df_2.at[key, "Skills"].split(", ")
+
+        skills_dict: dict[str, int] = {
+            skill.upper(): 1 if skill.upper() in map(str.upper, skills_list) else 0
+            for skill in SKILLS
+        }
+
+        projects.append(Project(name, team_number, skills_dict))
+
 
     students: list[Student] = []
     # last row is nan, first row is headers
