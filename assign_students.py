@@ -134,13 +134,11 @@ def assign_students(students: list[Student], projects: list[Project], base_team_
         if student.lab not in lab_populations:
             lab_populations[student.lab] = 0
         lab_populations[student.lab] += 1
-    print(f"Lab populations: {lab_populations}")
 
     lab_team_count = {
         lab: (population // base_team_size)
         for lab, population in lab_populations.items()
     }
-    print(f"Lab team count: {lab_team_count}")
     lab_team_sizes: dict[str, TeamSizes] = {}
     for lab, num_teams in lab_team_count.items():
         lab_team_sizes[lab] = [base_team_size] * num_teams
