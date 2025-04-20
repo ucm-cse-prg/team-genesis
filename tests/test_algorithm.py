@@ -21,10 +21,9 @@ def test_algorithm(pref_scalar):
     write_to_file(projects, filename=f"tests/test_results_{pref_scalar}.txt")
     with open(f"tests/test_results_{pref_scalar}.txt", "r") as f:
         lines = f.readlines()
+    os.remove(f"tests/test_results_{pref_scalar}.txt") 
     with open(f"tests/data/test_results_{pref_scalar}.txt", "r") as f:
         expected_lines = f.readlines()
 
     assert lines == expected_lines, f"Test failed for preference score {pref_scalar}."
-
-    os.remove(f"tests/test_results_{pref_scalar}.txt") 
 
