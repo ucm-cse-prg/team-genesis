@@ -15,4 +15,6 @@ venv.bak/
 student_data/*
 !student_data/.gitkeep
 output/*
-!output/.gitkeep
+!output/metrics_per_team_histogram_with_labs_public.png
+results_skill.txt
+data/
