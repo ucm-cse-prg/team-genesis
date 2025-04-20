@@ -17,4 +17,5 @@ student_data/*
 output/*
 !output/histogram_public.png
 results_skill.txt
-data/
+tests/data/*
+!tests/data/anonymized*
