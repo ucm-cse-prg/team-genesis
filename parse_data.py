@@ -5,7 +5,6 @@ import copy
 
 def parse_data(
     student_project_data_file: str,
-    skills_file: str,
 ) -> tuple[list[Student], list[Project]]:
     """Parses the student project data file and the skills file.
     The student project data file is an Excel file with multiple sheets. The
@@ -42,8 +41,18 @@ def parse_data(
             break
         lab_populations[lab] = lab_populations.get(lab, 0) + 1
 
-    with open(skills_file, "r") as f:
-        SKILLS = f.read().splitlines()
+    # columns are Name, Email, LabSection, then skills
+    student_df_2 = pd.read_excel(
+        student_project_data_file,
+        sheet_name="survey_results3",
+        index_col=None,
+    )
+
+    SKILLS = [
+        col
+        for col in student_df_2.columns
+        if col not in ["Name", "Email", "LabSection"]
+    ]
 
     project_df = pd.read_excel(
         student_project_data_file,
@@ -72,7 +81,6 @@ def parse_data(
 
         projects.append(Project(name, team_number, skills_dict))
 
-
     students: list[Student] = []
     # last row is nan, first row is headers
     for i in range(len(student_df)):
@@ -80,12 +88,6 @@ def parse_data(
 
         students.append(s)
 
-    # columns are Name, Email, LabSection, then skills
-    student_df_2 = pd.read_excel(
-        student_project_data_file,
-        sheet_name="survey_results3",
-        index_col=None,
-    )
     for i in range(len(student_df_2)):
         student = students[i]
         for skill in SKILLS:

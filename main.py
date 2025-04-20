@@ -7,8 +7,7 @@ if __name__ == "__main__":
     students: list[Student]
     projects: list[Project]
     students, projects = parse_data(
-        student_project_data_file="student_data/2025-01-Spring-CSE-MASTER.xlsx",
-        skills_file="student_data/SKILLS_LIST_S25.txt",
+        student_project_data_file="student_data/2025-01-Spring-CSE-MASTER.xlsx"
     )
     assign_students(students, projects, base_team_size=5, seed=42, pref_scalar=20)
     write_to_file(projects, filename="output/results.txt")
