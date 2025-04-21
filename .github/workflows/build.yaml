@@ -9,7 +9,7 @@ on:
 jobs:
   release:
     name: Build and Release Python Package to GitHub
-    runs-on: ubuntu-latest
+    runs-on: arc-runner-k8s
     concurrency: release
     permissions:
       id-token: write

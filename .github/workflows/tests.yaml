@@ -9,7 +9,7 @@ on:
 jobs:
   tests:
     name: python
-    runs-on: ubuntu-latest
+    runs-on: arc-runner-k8s
 
     steps:
       - uses: actions/checkout@v4
