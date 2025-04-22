@@ -13,7 +13,7 @@ class Team(BaseModel):
         title="Lab section",
         description="Lab section project was assigned to",
         min_length=3,
-        max_length=3, 
+        max_length=3,
         examples=["02L","03L","04L"],
     )
     capacity: int = Field(
@@ -28,10 +28,6 @@ class Team(BaseModel):
     members: List[Student] = Field(
         title="Members",
         description="The students working together on the assigned project",
-    )
-    total_match_score: float = Field(
-        title="Total match score",
-        description="A sum of all of the match scores of the students and the project",
     )
     skill_fulfillment_score: float = Field(
         title="Skill fulfillment score",
