@@ -1,3 +1,5 @@
-# app/models/__init__.py
+from .team import Team
+from .project import Project
+from .student import Student
 
-# This file is left intentionally blank
+__all__ = ["Project", "Student", "Team"]
