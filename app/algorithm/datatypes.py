@@ -115,7 +115,7 @@ class Student:
 
         self.preferences: dict[str, int] = {}
         for project in projects:
-            self.preferences[project.name] = df.at[i, project.original_name]
+            self.preferences[project.name] = int(df.at[i, project.original_name])
 
 
 LabName: TypeAlias = str

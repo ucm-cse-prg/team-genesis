@@ -12,7 +12,7 @@ from output_data import write_to_file
     "pref_scalar",
     [0, 10, 20, 30, 40, 50],
 )
-def test_algorithm(pref_scalar):
+def test_algorithm(pref_scalar: int) -> None:
     """Test the algorithm with different preference scores."""
     students, projects = parse_data(
         student_project_data_file="student_data/2025-01-Spring-CSE-MASTER.xlsx"

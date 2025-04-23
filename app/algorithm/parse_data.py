@@ -82,8 +82,9 @@ def parse_data(
         projects.append(Project(name, team_number, skills_dict))
 
     students: list[Student] = []
-    # last row is nan, first row is headers
-    for i in range(len(student_df)):
+    
+    # last 2 rows are empty
+    for i in range(len(student_df)-2):
         s = Student(student_df, projects, i, SKILLS)
 
         students.append(s)

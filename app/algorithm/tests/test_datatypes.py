@@ -16,7 +16,7 @@ from datatypes import Project
         ("XAOE_2", 3, {"skill1": 1, "skill2": 0}, "XAOE"),
     ],
 )
-def test_project_init(name, team_number, skills_dict, original_name):
+def test_project_init(name: str, team_number: int, skills_dict: dict[str, int], original_name: str) -> None:
     project = Project(name, team_number, skills_dict)
 
     assert project.name == name
@@ -37,7 +37,7 @@ def test_project_init(name, team_number, skills_dict, original_name):
         min_size=1,
     ),
 )
-def test_project_init_hypothesis(name, team_number, skills_dict):
+def test_project_init_hypothesis(name: str, team_number: int, skills_dict: dict[str, int]) -> None:
     project = Project(name, team_number, skills_dict)
 
     assert project.name == name

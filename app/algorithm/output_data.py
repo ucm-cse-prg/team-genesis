@@ -8,7 +8,7 @@ AssignedPreferences: TypeAlias = dict[ProjectName, float]
 ClasswidePreferences: TypeAlias = dict[ProjectName, float]
 
 
-def write_to_file(projects: list[Project], filename: str):
+def write_to_file(projects: list[Project], filename: str) -> None:
     """
     Writes the project assignments to a file.
 
