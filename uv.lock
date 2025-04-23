@@ -171,7 +171,7 @@ standard = [
 ]
 
 [[package]]
-name = "fastapi-app"
+name = "team-genesis"
 version = "0.1.5"
 source = { editable = "." }
 dependencies = [

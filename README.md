@@ -30,7 +30,7 @@ These features serve as a starting point for building and scaling your own web a
 ## Project Structure
 
 ```
-fastapi-app/
+team-genesis/
 ├── app
 │   ├── api.py             # API endpoints (generic GET, POST, PATCH, DELETE)
 │   ├── actions.py         # Business logic operations
@@ -105,19 +105,19 @@ docker run -d -p 27017:27017 --name mongodb mongo
 Ensure that MongoDB is running on your machine, then start the server in development mode with:
 
 ```bash
-uv run fastapi-app
+uv run team-genesis
 ```
 
 Additional options can be viewed with:
 
 ```bash
-uv run fastapi-app --help
+uv run team-genesis --help
 ```
 
 You can also specify host, port, and MongoDB URL:
 
 ```bash
-uv run fastapi-app --host <HOST> --port <PORT> --mongodb-url=mongodb://localhost:27017
+uv run team-genesis --host <HOST> --port <PORT> --mongodb-url=mongodb://localhost:27017
 ```
 
 ## API Reference

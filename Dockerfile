@@ -32,4 +32,4 @@ RUN tar -xf *.tar.gz --strip-components=1
 RUN pip install .
 
 # Run the project
-CMD ["fastapi-app", "--host", "0.0.0.0", "--port", "8000"]
+CMD ["team-genesis", "--host", "0.0.0.0", "--port", "8000"]
