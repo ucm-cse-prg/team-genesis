@@ -8,7 +8,7 @@ from importlib.metadata import metadata
 
 from app.exceptions import InternalServerError
 
-PROJECT_METADATA = metadata("team-genesis")
+PROJECT_METADATA = metadata("fastapi-app")
 
 
 # Wrapper function to run action and rais InternalServerError if it fails
