@@ -2,9 +2,9 @@
 Database document models for Beanie ODM with MongoDB.
 """
 
-from models import Student as StudentModel
-from models import Project as ProjectModel
-from models import Team as TeamModel
+from .models import Student as StudentModel
+from .models import Project as ProjectModel
+from .models import Team as TeamModel
 from beanie import Document
 
 
