@@ -8,9 +8,4 @@ from models import Project, Student, Team
 from typing import List
 from pydantic import BaseModel
 
-class FormTeamRequest(BaseModel):
-    students: List[Student]
-    projects: List[Project]
 
-class FormTeamResponse(BaseModel):
-    teams: List[Team]

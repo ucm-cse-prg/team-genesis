@@ -4,13 +4,13 @@ Project Pydantic data model
 
 from typing import Dict, Optional
 from pydantic import BaseModel, Field
-
+from app.models.skill import Skill
 
 class Project(BaseModel):
     name: str = Field(
         title="Name",
         description="Name of project",
-        pattern=r"^[A-Za-z]+$",
+        pattern=r"^[A-Za-z0-9,'\"]+$",
     )
     description: str = Field(
         title="Description",
@@ -23,7 +23,7 @@ class Project(BaseModel):
         max_length=10,
         examples=["Fall2024", "Spring2025"],
     )
-    required_skills: Optional[Dict[str, float]]  = Field(
+    required_skills: list[Skill] = Field(
         title="Required skills",
         description="A list of skills that a project needs to complete",
         default=None

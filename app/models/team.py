@@ -2,7 +2,6 @@
 Team Pydantic data model
 '''
 
-from typing import List
 from pydantic import BaseModel, Field
 from app.models.project import Project
 from app.models.student import Student
@@ -25,7 +24,7 @@ class Team(BaseModel):
         title="Project",
         description="Project assigned to team",
     )
-    members: List[Student] = Field(
+    members: list[Student] = Field(
         title="Members",
         description="The students working together on the assigned project",
     )
