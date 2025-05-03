@@ -3,7 +3,6 @@ Project Pydantic data model
 """
 
 from pydantic import BaseModel, Field
-from typing import Optional
 from app.models.skill import Skill
 
 class Project(BaseModel):

@@ -84,3 +84,8 @@ async def create_student(
     
     return new_student
 
+async def delete_student(student: Student) -> None:
+    await Student.delete(student)
+
+    if await Student.get(student.id):
+        raise InternalServerError("Failed to delete student")

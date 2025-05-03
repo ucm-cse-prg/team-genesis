@@ -50,3 +50,10 @@ async def create_student(
     except APIException as e:
         raise HTTPException(status_code=e.code, detail=e.detail)
 
+@router.delete("/students/{id}", status_code=204)
+@http_exception
+async def delete_student(student: Documents.Student) -> None:
+    try:
+        await Actions.delete_student(student)
+    except APIException as e:
+        raise HTTPException(status_code=e.code, detail=e.detail)
