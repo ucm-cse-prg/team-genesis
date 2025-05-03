@@ -6,7 +6,7 @@ import typing
 from functools import wraps
 from importlib.metadata import metadata
 from pydantic import EmailStr
-
+from typing import Optional
 from app.exceptions import InternalServerError
 from app.documents import Student
 from app.models.skill import Skill
@@ -89,3 +89,38 @@ async def delete_student(student: Student) -> None:
 
     if await Student.get(student.id):
         raise InternalServerError("Failed to delete student")
+
+async def update_student(
+    student: Student,
+    first_name: Optional[str] = None,
+    last_name: Optional[str] = None,
+    email: Optional[EmailStr] = None,
+    sid: Optional[str] = None,
+    lab_section: Optional[str] = None,
+    semester: Optional[str] = None,
+    skills: Optional[list[Skill]] = None,
+    preferences: Optional[dict[str, int]] = None,
+) -> Student:
+    if first_name is not None:
+        student.first_name = first_name
+    if last_name is not None:
+        student.last_name = last_name
+    if email is not None:
+        student.email = email
+    if sid is not None:
+        student.sid = sid
+    if lab_section is not None:
+        student.lab_section = lab_section
+    if semester is not None:
+        student.semester = semester
+    if skills is not None:
+        student.skills = skills
+    if preferences is not None:
+        student.preferences = preferences
+
+    updated_student = await student.update()
+
+    if not updated_student:
+        raise InternalServerError("Failed to update student")
+
+    return updated_student

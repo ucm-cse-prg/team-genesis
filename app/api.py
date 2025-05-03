@@ -7,7 +7,7 @@ from functools import wraps
 
 from fastapi import APIRouter, HTTPException
 from fastapi.responses import HTMLResponse
-from app.schemas import createStudentRequst, createStudentResponse
+from app.schemas import createStudentRequst, createStudentResponse, updateStudentResponse, updateStudentRequst
 import app.documents as Documents
 import app.actions as Actions
 from app.actions import home_page
@@ -55,5 +55,14 @@ async def create_student(
 async def delete_student(student: Documents.Student) -> None:
     try:
         await Actions.delete_student(student)
+    except APIException as e:
+        raise HTTPException(status_code=e.code, detail=e.detail)
+
+@router.patch("/students/{id}", response_model=updateStudentResponse)
+async def update_student(
+    request_body: updateStudentRequst,
+    student: Documents.Student) -> Documents.Student:
+    try:
+        return await Actions.update_student(student, **request_body.model_dump())
     except APIException as e:
         raise HTTPException(status_code=e.code, detail=e.detail)
