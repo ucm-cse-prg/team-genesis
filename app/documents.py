@@ -10,15 +10,15 @@ from beanie import Document
 
 class Student(Document, StudentModel):
     class Settings:
-        name= "Students"
+        name= "students"
 
 class Project(Document, ProjectModel):
     class Settings:
-        name= "Projects"
+        name= "projects"
 
 class Team(Document, TeamModel):
     class Settings:
-        name= "Teams"
+        name= "teams"
 
 
 # The DOCUMENTS list is used to register all document models with Beanie.

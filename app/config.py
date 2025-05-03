@@ -23,7 +23,7 @@ class Settings(BaseSettings):
         description="The URL of the MongoDB database.",
     )
     db_name: str = Field(
-        default="test_db",
+        default="team-genesis",
         title="Database Name",
         description="The name of the database.",
     )
