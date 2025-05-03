@@ -40,11 +40,7 @@ class Student(BaseModel):
         max_length=10,
         examples=["Fall2024", "Spring2025"],
     )
-    skills: list[Skill] = Field(
-        title="Skills list",
-        description="A list of skills that the student self rates. Keys are skills and values are a float",
-        default = None,
-    )
+    skills: list[Skill] = []
     preferences: Optional[Dict[str, int]] = Field(
         title="Student project preferences",
         description="A dictionary containing the student's project preferences. Keys are projects and values are ints.",

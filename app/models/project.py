@@ -2,8 +2,8 @@
 Project Pydantic data model
 """
 
-from typing import Dict, Optional
 from pydantic import BaseModel, Field
+from typing import Optional
 from app.models.skill import Skill
 
 class Project(BaseModel):
@@ -23,8 +23,4 @@ class Project(BaseModel):
         max_length=10,
         examples=["Fall2024", "Spring2025"],
     )
-    required_skills: list[Skill] = Field(
-        title="Required skills",
-        description="A list of skills that a project needs to complete",
-        default=None
-    )
+    required_skills: list[Skill] = []

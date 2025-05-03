@@ -7,7 +7,9 @@ from functools import wraps
 
 from fastapi import APIRouter, HTTPException
 from fastapi.responses import HTMLResponse
-
+from app.schemas import createStudentRequst, createStudentResponse
+import app.documents as Documents
+import app.actions as Actions
 from app.actions import home_page
 from app.exceptions import APIException
 
@@ -37,3 +39,14 @@ async def root() -> HTMLResponse:
         content=content,
         status_code=200,
     )
+
+@router.post("/students", response_model=createStudentResponse, status_code=201)
+@http_exception
+async def create_student(
+    student: createStudentRequst,
+) -> Documents.Student:
+    try:
+        return await Actions.create_student(**student.model_dump())
+    except APIException as e:
+        raise HTTPException(status_code=e.code, detail=e.detail)
+

@@ -5,8 +5,11 @@ Actions for handling the internal logic of API endpoints.
 import typing
 from functools import wraps
 from importlib.metadata import metadata
+from pydantic import EmailStr
 
 from app.exceptions import InternalServerError
+from app.documents import Student
+from app.models.skill import Skill
 
 PROJECT_METADATA = metadata("team-genesis")
 
@@ -54,3 +57,30 @@ async def home_page() -> str:
     # raise Exception("This is a test exception")
 
     return content
+
+async def create_student(
+    first_name: str,
+    last_name: str,
+    email: EmailStr,
+    sid: str,
+    lab_section: str,
+    semester: str,
+    skills: list[Skill],
+    preferences: typing.Optional[dict[str, int]] = None,
+) -> Student:
+    new_student: Student = await Student(
+        first_name=first_name,
+        last_name=last_name,
+        email=email,
+        sid=sid,
+        lab_section=lab_section,
+        semester=semester,
+        skills=skills,
+        preferences=preferences,
+    ).insert()
+
+    if not new_student:
+        raise InternalServerError("Failed to create student")
+    
+    return new_student
+
