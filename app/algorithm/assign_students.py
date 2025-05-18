@@ -1,276 +1,133 @@
 from datatypes import Student, Project, LabName
-from typing import Optional
-import numpy as np
-import random
-from collections import defaultdict
-from typing import TypeAlias, Any
+from typing import Optional, Dict
+from pulp import (
+    LpProblem,
+    LpMaximize,
+    LpVariable,
+    lpSum,
+    LpBinary,
+    LpAffineExpression,
+    LpStatus,
+    PULP_CBC_CMD,
+)
+import time
 
-def score_pair(
-    student: Student,
-    project: Project,
-    pref_scalar: int,
-) -> tuple[float, float]:
-    """Scores a student/project pair based on preference and skills
 
-    Args:
-        student: The student to score.
-        project: The project to score.
-        pref_scalar: An integer scalar to multiply the preference rating by for scoring.
-        skills: A list of skills the student or project can have.
-
-    Returns:
-        A tuple containing the preference score and skill score of the student/project
-        pair.
-    """
-    skills_weights = {key: 1.0 for key in project.skills_dict.keys()}
-    # track how many skills a project requires and which are unfulfilled
-    unfulfilled_skills = []
-    total_project_skills = 0
-    for (
-        skill,
-        required,
-    ) in project.skills_dict.items():
-        if not required:
-            continue
-        total_project_skills += 1
-
-        if all(
-            student.skills_ratings[skill] <= 5 for student in project.assigned_students
-        ):
-            unfulfilled_skills.append(skill)
-
-    # update weights for student skills based on total num skills and num unfulfilled skills
-    if unfulfilled_skills:
-        num_unfulfilled_skills = len(unfulfilled_skills)
-        weight = total_project_skills / num_unfulfilled_skills
-        for skill in unfulfilled_skills:
-            skills_weights[skill] = weight
-
-    # find skills that current student/project pair both have
-    matching_skills = [
-        skill
-        for skill in student.skills_ratings
-        if student.skills_ratings[skill] != 0 and project.skills_dict[skill] != 0
-    ]
-
-    preference_score = pref_scalar * student.preferences[project.name]
-
-    skill_score = 0.0
-    for matched_skill in matching_skills:
-        skill_score += (
-            student.skills_ratings[matched_skill] * skills_weights[matched_skill]
-        )
-
-    return preference_score, skill_score
-
-# TODO: need refactoring and better name because this is the basically the same as the main thing "assign_students"
-def assign_students_to_projects(
+def assign_students(
     students: list[Student],
     projects: list[Project],
-    pref_scalar: int,
+    base_team_size: int,
+    pref_scalar: float = 0.5,
+    optimal_gap: float = 0.01,
 ) -> None:
-    """Assigns students to projects based on preference and skill scores
+    problem: LpProblem = LpProblem("problem", LpMaximize)
+    student_project_assignment: Dict[Student, Dict[Project, LpVariable]] = (
+        LpVariable.dicts("x", (students, projects), cat=LpBinary)
+    )
 
-    Modifies the assigned_project attribute of each student in the students list.
-
-    Args:
-        students: A list of Student objects to assign to projects.
-        projects: A list of Project objects to assign students to.
-        pref_scalar: An integer scalar to multiply the preference rating by for scoring.
-        skills: A list of skills the student or project can have.
-
-    Returns:
-        None
-    """
-    assigned_student_count = 0
-    while assigned_student_count < len(students):
-        max_pair: tuple[Student, Project] = (students[0], projects[0])
-        max_score = -1.0
-        max_pref_score = -1.0
-        for student in students:
-            if student.assigned_project:
-                continue
-            for project in projects:
-                if len(project.assigned_students) >= project.team_capacity:
-                    continue
-                scores = score_pair(student, project, pref_scalar)
-                score = sum(scores)
-                if score > max_score:
-                    max_score = score
-                    max_pair = (student, project)
-                    max_pref_score = scores[0]
-                if score == max_score:  # break ties based on pref score
-                    if scores[0] > max_pref_score:
-                        max_score = score
-                        max_pair = (student, project)
-                        max_pref_score = scores[0]
-                    if scores[0] == max_pref_score and random.choice([True, False]):
-                        max_score = score
-                        max_pair = (student, project)
-                        max_pref_score = scores[0]
-
-        max_pair[0].assigned_project = max_pair[1].name
-        max_pair[1].assigned_students.append(max_pair[0])
-
-        assigned_student_count += 1
-
-TeamSizes: TypeAlias = list[int]
-"""A list of the number of students in each team for a lab."""
-
-def assign_students(students: list[Student], projects: list[Project], base_team_size: int = 5, pref_scalar: int = 20, seed: Optional[int] = None) -> None:
-    """Assigns students to projects based on their preferences and skills.
-    Mutates the passed students and projects.
-    
-    Args:
-        students (list[Student]): A list of students to be assigned to projects.
-        projects (list[Project]): A list of projects to assign students to.
-
-    Returns:
-        None
-    """
-
-    if seed is not None:
-        random.seed(seed)
-
-    lab_populations: dict[LabName, int] = {}
+    # many-to-one assignment
     for student in students:
-        if student.lab not in lab_populations:
-            lab_populations[student.lab] = 0
-        lab_populations[student.lab] += 1
-
-    lab_team_count = {
-        lab: (population // base_team_size)
-        for lab, population in lab_populations.items()
-    }
-    lab_team_sizes: dict[str, TeamSizes] = {}
-    for lab, num_teams in lab_team_count.items():
-        lab_team_sizes[lab] = [base_team_size] * num_teams
-
-        remaining = lab_populations[lab] - num_teams * base_team_size
-        lab_team_sizes[lab] = [
-            lab_team_sizes[lab][j] + remaining // num_teams for j in range(num_teams)
-        ]
-        remaining = remaining % num_teams
-        for j in range(remaining):
-            lab_team_sizes[lab][j] += 1
-
-        for j, size in enumerate(lab_team_sizes[lab]):
-            if size > 6:
-                lab_team_sizes[lab][j] = size // 2
-                lab_team_sizes[lab].append(size // 2 + size % 2)
-
-
-    lab_preferences: dict[LabName, dict[Project, float]] = {}
-    for lab in lab_team_count.keys():
-        lab_preferences[lab] = {}
-        for student in students:
-            if student.lab == lab:
-                for project in projects:
-                    if project.name not in lab_preferences[lab]:
-                        lab_preferences[lab][project] = 0
-                    lab_preferences[lab][project] += student.preferences[
-                        project.name
-                    ]
-                lab_preferences[lab][project] = (
-                    lab_preferences[lab][project] / len(students)
-                )
-
-
-    lab_skills_ratings: dict[LabName, dict[str, list[float]]] = {
-        lab: {skill: [] for skill in project.skills_dict}
-        for lab in lab_team_count.keys()
-    }
-    for student in students:
-        for skill in student.skills_ratings:
-            lab_skills_ratings[student.lab][skill].append(student.skills_ratings[skill])
-    lab_skills_average_ratings: dict[LabName, dict[str, float]] = {
-        lab: {
-            skill: float(np.mean(ratings))
-            for skill, ratings in lab_skills_ratings[lab].items()
-        }
-        for lab in lab_team_count.keys()
-    }
-    project_preferences: dict[Project, dict[LabName, float]] = {}
+        problem += (
+            lpSum(student_project_assignment[student][project] for project in projects)
+            == 1,
+            f"OneProjectPerStudent_{student.email}",
+        )
     for project in projects:
-        project_preferences[project] = {}
-        for lab in lab_team_count.keys():
-            project_preferences[project][lab] = 0
-            for skill in project.skills_dict:
-                if project.skills_dict[skill] == 0:
-                    continue
-                project_preferences[project][lab] += lab_skills_average_ratings[lab][
-                    skill
-                ]
-            project_preferences[project][lab] = project_preferences[project][lab] / len(
-                project.skills_dict
+        problem += (
+            lpSum(student_project_assignment[student][project] for student in students)
+            == base_team_size,
+            f"MaxTeamSize_{project.name}",
+        )
+
+    # lab restriction
+    labs: list[LabName] = list(set(student.lab for student in students))
+    labs.sort()
+    lab_assignments: Dict[LabName, Dict[Project, LpVariable]] = LpVariable.dicts(
+        "y", (labs, projects), cat=LpBinary
+    )
+    for project in projects:
+        problem += (
+            lpSum(lab_assignments[lab][project] for lab in labs) == 1,
+            f"OneLabPerProject_{project.name}",
+        )
+    for project in projects:
+        for student in students:
+            problem += (
+                student_project_assignment[student][project]
+                <= lab_assignments[student.lab][project],
+                f"LabAssignment_{student.email}_{project.name}",
             )
 
-    lab_preferences_order: dict[LabName, list[Project]] = {
-        lab: sorted(
-            lab_preferences[lab].keys(),
-            key=lambda x: lab_preferences[lab][x],
-            reverse=True,
+    # student preference objective
+    total_student_preference: LpAffineExpression = (
+        lpSum(
+            student_project_assignment[student][project]
+            * student.preferences[project.name]
+            for student in students
+            for project in projects
         )
-        for lab in lab_preferences.keys()
+        / 9
+    )
+
+    # skill fulfillment objective
+    skills = list(set(projects[0].skills_dict.keys()))
+    required_skills: Dict[Project, list[str]] = {
+        project: [
+            skill for skill in project.skills_dict if project.skills_dict[skill] == 1
+        ]
+        for project in projects
     }
-    lab_project_count: dict[LabName, int] = {lab: 0 for lab in lab_team_count.keys()}
-    lab_names = list(lab_preferences.keys())
-    lab_index = 0
-    all_projects_assigned = False
-    while not all_projects_assigned:
-        for project in projects:
-            if not project.assigned_lab:
-                break
-        else:
-            all_projects_assigned = True
-            break
-
-        lab = lab_names[lab_index]
-        if lab_project_count[lab] == lab_team_count[lab]:
-            lab_index += 1 if lab_index != 5 else -5
-            continue
-
-        project = lab_preferences_order[lab].pop(0)
-        if not project.assigned_lab:
-            project.assigned_lab = lab
-            lab_project_count[lab] += 1
-            continue
-        if project_preferences[project][lab] > project_preferences[project][
-            project.assigned_lab
-        ] or (
-            project_preferences[project][lab]
-            == project_preferences[project][project.assigned_lab]
-            and random.choice([True, False])
-        ):
-            lab_project_count[project.assigned_lab] -= 1
-            project.assigned_lab = lab
-            lab_project_count[lab] += 1
-            continue
-
-    classwide_preferences: dict[str, float] = {}
+    fulfills_skill: Dict[Student, Dict[str, int]] = {
+        student: {
+            skill: 1
+            for skill in student.skills_ratings
+            if student.skills_ratings[skill] >= 6
+        }
+        for student in students
+    }
+    project_skill_fulfilled: Dict[Project, Dict[str, LpVariable]] = LpVariable.dicts(
+        "z", (projects, skills), cat=LpBinary
+    )
     for project in projects:
-        preference = 0
-        for student in students:
-            preference += student.preferences[project.name]
-        classwide_preferences[project.name] = preference / len(students)
+        for skill in required_skills[project]:
+            problem += (
+                lpSum(
+                    student_project_assignment[student][project]
+                    * fulfills_skill[student].get(skill, 0)
+                    for student in students
+                )
+                >= project_skill_fulfilled[project][skill],
+                f"SkillFulfillment_{project.name}_{skill}",
+            )
 
-    for lab in lab_team_sizes.keys():
-        lab_projects = [
-            project for project in projects if project.assigned_lab == lab
-        ]
-        for i in range(len(lab_projects)):
-            lab_projects[i].team_capacity = lab_team_sizes[lab][i]
+    total_skill_fulfillment: LpAffineExpression = (
+        lpSum(
+            project_skill_fulfilled[project][skill]
+            * (1.0 / len(required_skills[project]))
+            for project in projects
+            for skill in required_skills[project]
+        )
+        * 100
+        / len(projects)
+    )
 
-    formed_teams_dict: dict[str, list[Any]] = defaultdict(list)
-    team_pref_scores: dict[str, list[int]] = defaultdict(list)
+    problem += (
+        total_student_preference * pref_scalar
+        + total_skill_fulfillment * (1 - pref_scalar),
+        "Objective",
+    )
 
-    # PHASE 3: ASSIGNING STUDENTS TO PROJECTS
-    for lab in lab_team_sizes.keys():
-        # group students and project by lab
-        cur_students: list[Student] = [
-            student for student in students if student.lab == lab
-        ]
-        cur_projects: list[Project] = [
-            project for project in projects if project.assigned_lab == lab
-        ]
-        assign_students_to_projects(cur_students, cur_projects, pref_scalar=pref_scalar)
+    start = time.time()
+    print(f"Starting solver at time: {time.strftime('%I:%M:%S %p')}")
+    problem.solve(PULP_CBC_CMD(msg=False, timeLimit=60, threads=32, gapRel=optimal_gap))
+    end = time.time()
+    print(f"Solver time: {end - start:.2f} seconds")
+
+    for student in students:
+        for project in projects:
+            if student_project_assignment[student][project].varValue == 1:
+                student.assigned_project = project.name
+                project.assigned_students.append(student)
+                project.assigned_lab = student.lab
+                project.team_capacity = base_team_size
+                break

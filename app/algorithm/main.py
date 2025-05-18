@@ -9,8 +9,10 @@ if __name__ == "__main__":
     students, projects = parse_data(
         student_project_data_file="student_data/2025-01-Spring-CSE-MASTER.xlsx"
     )
-    assign_students(students, projects, base_team_size=5, seed=42, pref_scalar=20)
+    assign_students(
+        students, projects, base_team_size=5, pref_scalar=0.7, optimal_gap=0.08
+    )
     write_to_file(projects, filename="output/results.txt")
-    plot_histogram(students, projects, "output/skill_histogram.png")
+    plot_histogram(students, projects, "output/histogram_public.png", anonymize=True)
 
 # TODO: need duplication/deletion prio list from api
