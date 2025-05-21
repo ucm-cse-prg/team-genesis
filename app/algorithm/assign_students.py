@@ -1,14 +1,6 @@
 from datatypes import Student, Project, LabName
-from typing import Optional, Dict
-from pulp import (
-    LpProblem,
-    LpMaximize,
-    LpVariable,
-    lpSum,
-    LpBinary,
-    LpAffineExpression,
-    PULP_CBC_CMD,
-)
+from typing import Dict, Any
+from docplex.mp.model import Model  # type: ignore
 import time
 
 
@@ -19,54 +11,55 @@ def assign_students(
     pref_scalar: float = 0.5,
     optimal_gap: float = 0.01,
 ) -> None:
-    problem: LpProblem = LpProblem("problem", LpMaximize)
-    student_project_assignment: Dict[Student, Dict[Project, LpVariable]] = (
-        LpVariable.dicts("x", (students, projects), cat=LpBinary)
-    )
+    # create CPLEX model
+    model = Model(name="assign_students")
+    # decision variables for student-project assignment
+    student_project_assignment: Dict[tuple, Any] = {
+        (student, project): model.binary_var(name=f"x_{student.email}_{project.name}")
+        for student in students
+        for project in projects
+    }
 
     # many-to-one assignment
     for student in students:
-        problem += (
-            lpSum(student_project_assignment[student][project] for project in projects)
-            == 1,
-            f"OneProjectPerStudent_{student.email}",
+        model.add_constraint(
+            model.sum(student_project_assignment[(student, project)] for project in projects) == 1,
+            ctname=f"OneProjectPerStudent_{student.email}",
         )
     for project in projects:
-        problem += (
-            lpSum(student_project_assignment[student][project] for student in students)
-            == base_team_size,
-            f"MaxTeamSize_{project.name}",
+        model.add_constraint(
+            model.sum(student_project_assignment[(student, project)] for student in students) == base_team_size,
+            ctname=f"MaxTeamSize_{project.name}",
         )
 
     # lab restriction
     labs: list[LabName] = list(set(student.lab for student in students))
     labs.sort()
-    lab_assignments: Dict[LabName, Dict[Project, LpVariable]] = LpVariable.dicts(
-        "y", (labs, projects), cat=LpBinary
-    )
+    lab_assignments: Dict[tuple, Any] = {
+        (lab, project): model.binary_var(name=f"y_{lab}_{project.name}")
+        for lab in labs
+        for project in projects
+    }
     for project in projects:
-        problem += (
-            lpSum(lab_assignments[lab][project] for lab in labs) == 1,
-            f"OneLabPerProject_{project.name}",
+        model.add_constraint(
+            model.sum(lab_assignments[(lab, project)] for lab in labs) == 1,
+            ctname=f"OneLabPerProject_{project.name}",
         )
     for project in projects:
         for student in students:
-            problem += (
-                student_project_assignment[student][project]
-                <= lab_assignments[student.lab][project],
-                f"LabAssignment_{student.email}_{project.name}",
+            model.add_constraint(
+                student_project_assignment[(student, project)]
+                <= lab_assignments[(student.lab, project)],
+                ctname=f"LabAssignment_{student.email}_{project.name}",
             )
 
     # student preference objective
-    total_student_preference: LpAffineExpression = (
-        lpSum(
-            student_project_assignment[student][project]
-            * student.preferences[project.name]
-            for student in students
-            for project in projects
-        )
-        / 9
-    )
+    # student preference objective
+    total_student_preference = model.sum(
+        student_project_assignment[(student, project)] * student.preferences[project.name]
+        for student in students
+        for project in projects
+    ) / 9
 
     # skill fulfillment objective
     skills = list(set(projects[0].skills_dict.keys()))
@@ -84,25 +77,24 @@ def assign_students(
         }
         for student in students
     }
-    project_skill_fulfilled: Dict[Project, Dict[str, LpVariable]] = LpVariable.dicts(
-        "z", (projects, skills), cat=LpBinary
-    )
+    project_skill_fulfilled: Dict[tuple, Any] = {
+        (project, skill): model.binary_var(name=f"z_{project.name}_{skill}")
+        for project in projects
+        for skill in skills
+    }
     for project in projects:
         for skill in required_skills[project]:
-            problem += (
-                lpSum(
-                    student_project_assignment[student][project]
-                    * fulfills_skill[student].get(skill, 0)
+            model.add_constraint(
+                model.sum(
+                    student_project_assignment[(student, project)] * fulfills_skill[student].get(skill, 0)
                     for student in students
-                )
-                >= project_skill_fulfilled[project][skill],
-                f"SkillFulfillment_{project.name}_{skill}",
+                ) >= project_skill_fulfilled[(project, skill)],
+                ctname=f"SkillFulfillment_{project.name}_{skill}",
             )
 
-    total_skill_fulfillment: LpAffineExpression = (
-        lpSum(
-            project_skill_fulfilled[project][skill]
-            * (1.0 / len(required_skills[project]))
+    total_skill_fulfillment = (
+        model.sum(
+            project_skill_fulfilled[(project, skill)] * (1.0 / len(required_skills[project]))
             for project in projects
             for skill in required_skills[project]
         )
@@ -110,23 +102,35 @@ def assign_students(
         / len(projects)
     )
 
-    problem += (
-        total_student_preference * pref_scalar
-        + total_skill_fulfillment * (1 - pref_scalar),
-        "Objective",
-    )
+    # set objective to maximize combined preference and skill fulfillment
+    model.maximize(total_student_preference * pref_scalar + total_skill_fulfillment * (1 - pref_scalar))
 
+    # configure CPLEX parameters and solve
+    model.parameters.timelimit = 60
+    model.parameters.mip.tolerances.mipgap = optimal_gap
+    model.parameters.threads = 32
     start = time.time()
-    print(f"Starting solver at time: {time.strftime('%I:%M:%S %p')}")
-    problem.solve(PULP_CBC_CMD(msg=False, timeLimit=60, threads=32, gapRel=optimal_gap))
+    print(f"Starting CPLEX solver at time: {time.strftime('%I:%M:%S %p')}")
+    solution = model.solve(log_output=False)
     end = time.time()
-    print(f"Solver time: {end - start:.2f} seconds")
+    print(f"CPLEX solver time: {end - start:.2f} seconds")
+    
+    if solution is None:
+        raise RuntimeError("No solution found by CPLEX")
 
+    # extract solution assignments
     for student in students:
         for project in projects:
-            if student_project_assignment[student][project].varValue == 1:
+            var = student_project_assignment[(student, project)]
+            # use solution object to get variable value
+            if solution.get_value(var) > 0.5:
                 student.assigned_project = project.name
                 project.assigned_students.append(student)
                 project.assigned_lab = student.lab
                 project.team_capacity = base_team_size
                 break
+
+    # Print the results
+    print("Student Assignments:")
+    for student in students:
+        print(f"{student.fn} {student.ln} -> {student.assigned_project}")
