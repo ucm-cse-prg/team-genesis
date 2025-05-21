@@ -7,7 +7,6 @@ from pulp import (
     lpSum,
     LpBinary,
     LpAffineExpression,
-    LpStatus,
     PULP_CBC_CMD,
 )
 import time
