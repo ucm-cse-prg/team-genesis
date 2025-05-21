@@ -1,5 +1,5 @@
 import re
-import pandas as pd
+import pandas as pd  # type: ignore
 from typing import TypeAlias
 
 
@@ -91,7 +91,10 @@ class Student:
         self.email = df.at[i, "Email"]
         self.lab = df.at[i, "Lab"]
 
-        scraped_skills = re.sub(r"\([^)]*\)", "", df.at[i, "Skills"]).upper().split(",")
+        # handle missing or non-string skills entries
+        skills_val = df.at[i, "Skills"]
+        skills_str = "" if pd.isna(skills_val) else str(skills_val)
+        scraped_skills = re.sub(r"\([^)]*\)", "", skills_str).upper().split(",")
         proficiencies = re.sub(r"\([^)]*\)", "", str(df.at[i, "Proficient"])).upper()
         parsed_proficient_skills = []
         self.skills_ratings = {key: 0 for key in skills}
