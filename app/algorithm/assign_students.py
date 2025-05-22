@@ -1,132 +1,136 @@
 from datatypes import Student, Project, LabName
-from typing import Optional, Dict
+from typing import List, Dict
 from pulp import (
     LpProblem,
     LpMaximize,
     LpVariable,
     lpSum,
     LpBinary,
-    LpAffineExpression,
-    PULP_CBC_CMD,
+    CPLEX_CMD,
+    LpStatus,
 )
 import time
 
-
 def assign_students(
-    students: list[Student],
-    projects: list[Project],
+    students: List[Student],
+    projects: List[Project],
     base_team_size: int,
     pref_scalar: float = 0.5,
     optimal_gap: float = 0.01,
 ) -> None:
-    problem: LpProblem = LpProblem("problem", LpMaximize)
-    student_project_assignment: Dict[Student, Dict[Project, LpVariable]] = (
-        LpVariable.dicts("x", (students, projects), cat=LpBinary)
-    )
+    # 1) Build safe string keys and reverse maps
+    stu_keys = [s.email.replace("@", "_").replace(".", "_") for s in students]
+    proj_keys = [p.name.replace(" ", "_") for p in projects]
+    labs     = sorted({s.lab for s in students})
+    skills   = list({skill for p in projects for skill in p.skills_dict})
 
-    # many-to-one assignment
-    for student in students:
+    stu_map  = dict(zip(students, stu_keys))
+    proj_map = dict(zip(projects, proj_keys))
+
+    # 2) Create the PuLP model and variables
+    problem = LpProblem("assign_students", LpMaximize)
+    x = LpVariable.dicts("x", (stu_keys, proj_keys), cat=LpBinary)   # student→project
+    y = LpVariable.dicts("y", (labs,     proj_keys), cat=LpBinary)   # lab→project
+    z = LpVariable.dicts("z", (proj_keys, skills),   cat=LpBinary)   # project×skill
+
+    # 3) Each student gets exactly one project
+    for s in students:
+        k = stu_map[s]
         problem += (
-            lpSum(student_project_assignment[student][project] for project in projects)
-            == 1,
-            f"OneProjectPerStudent_{student.email}",
-        )
-    for project in projects:
-        problem += (
-            lpSum(student_project_assignment[student][project] for student in students)
-            == base_team_size,
-            f"MaxTeamSize_{project.name}",
+            lpSum(x[k][proj_map[p]] for p in projects) == 1,
+            f"OneProjPerStudent_{k}"
         )
 
-    # lab restriction
-    labs: list[LabName] = list(set(student.lab for student in students))
-    labs.sort()
-    lab_assignments: Dict[LabName, Dict[Project, LpVariable]] = LpVariable.dicts(
-        "y", (labs, projects), cat=LpBinary
-    )
-    for project in projects:
+    # 4) Each project has exactly base_team_size students
+    for p in projects:
+        k = proj_map[p]
         problem += (
-            lpSum(lab_assignments[lab][project] for lab in labs) == 1,
-            f"OneLabPerProject_{project.name}",
+            lpSum(x[stu_map[s]][k] for s in students) == base_team_size,
+            f"TeamSize_{k}"
         )
-    for project in projects:
-        for student in students:
+
+    # 5) Exactly one lab per project
+    for p in projects:
+        k = proj_map[p]
+        problem += (
+            lpSum(y[lab][k] for lab in labs) == 1,
+            f"OneLabPerProject_{k}"
+        )
+
+    # 6) A student can only go to a project in their lab
+    for s in students:
+        sk = stu_map[s]
+        for p in projects:
+            pk = proj_map[p]
             problem += (
-                student_project_assignment[student][project]
-                <= lab_assignments[student.lab][project],
-                f"LabAssignment_{student.email}_{project.name}",
+                x[sk][pk] <= y[s.lab][pk],
+                f"LabMatch_{sk}_{pk}"
             )
 
-    # student preference objective
-    total_student_preference: LpAffineExpression = (
-        lpSum(
-            student_project_assignment[student][project]
-            * student.preferences[project.name]
-            for student in students
-            for project in projects
-        )
-        / 9
-    )
+    # 7) Build objective: weighted sum of preference and skill fulfillment
+    #   7a) preference term
+    total_pref = lpSum(
+        x[stu_map[s]][proj_map[p]] * s.preferences[p.name]
+        for s in students for p in projects
+    ) / 9.0
 
-    # skill fulfillment objective
-    skills = list(set(projects[0].skills_dict.keys()))
-    required_skills: Dict[Project, list[str]] = {
-        project: [
-            skill for skill in project.skills_dict if project.skills_dict[skill] == 1
-        ]
-        for project in projects
-    }
-    fulfills_skill: Dict[Student, Dict[str, int]] = {
-        student: {
-            skill: 1
-            for skill in student.skills_ratings
-            if student.skills_ratings[skill] >= 6
-        }
-        for student in students
-    }
-    project_skill_fulfilled: Dict[Project, Dict[str, LpVariable]] = LpVariable.dicts(
-        "z", (projects, skills), cat=LpBinary
-    )
-    for project in projects:
-        for skill in required_skills[project]:
+    #   7b) skill fulfillment term
+    #     a) find required skills per project
+    req_sk = {p: [sk for sk, val in p.skills_dict.items() if val == 1] 
+              for p in projects}
+    #     b) z[p][skill] flags that at least one assigned student has skill
+    for p in projects:
+        pk = proj_map[p]
+        for sk in req_sk[p]:
             problem += (
                 lpSum(
-                    student_project_assignment[student][project]
-                    * fulfills_skill[student].get(skill, 0)
-                    for student in students
-                )
-                >= project_skill_fulfilled[project][skill],
-                f"SkillFulfillment_{project.name}_{skill}",
+                    x[stu_map[s]][pk] * (1 if s.skills_ratings.get(sk, 0) >= 6 else 0)
+                    for s in students
+                ) >= z[pk][sk],
+                f"SkillFulfill_{pk}_{sk}"
             )
 
-    total_skill_fulfillment: LpAffineExpression = (
+    total_skill = (
         lpSum(
-            project_skill_fulfilled[project][skill]
-            * (1.0 / len(required_skills[project]))
-            for project in projects
-            for skill in required_skills[project]
-        )
-        * 100
-        / len(projects)
+            z[proj_map[p]][sk] * (1.0 / len(req_sk[p]))
+            for p in projects for sk in req_sk[p]
+        ) * 100.0 / len(projects)
     )
 
     problem += (
-        total_student_preference * pref_scalar
-        + total_skill_fulfillment * (1 - pref_scalar),
-        "Objective",
+        total_pref * pref_scalar + total_skill * (1 - pref_scalar),
+        "CombinedObjective"
     )
 
+    # 8) Solve with CPLEX_CMD and keep the .lp/.sol for debugging
+    solver = CPLEX_CMD(
+        path="/Applications/CPLEX_Studio2211/cplex/bin/x86-64_osx/cplex",
+        msg=True,
+        keepFiles=1,
+        timeLimit=60,
+        options=[
+            f"set timelimit {60}",
+            f"set mip tolerances mipgap {optimal_gap}",
+            f"set threads {32}",
+        ],
+    )
+    print("Starting CPLEX…")
     start = time.time()
-    print(f"Starting solver at time: {time.strftime('%I:%M:%S %p')}")
-    problem.solve(PULP_CBC_CMD(msg=False, timeLimit=60, threads=32, gapRel=optimal_gap))
-    end = time.time()
-    print(f"Solver time: {end - start:.2f} seconds")
+    status = problem.solve(solver)
+    print(f"CPLEX time: {time.time() - start:.2f}s | Status: {LpStatus.get(status, status)}")
+    if LpStatus.get(status) != 'Optimal':
+        raise RuntimeError(f"CPLEX did not find optimal solution: {LpStatus.get(status)}")
 
-    for student in students:
-        for project in projects:
-            if student_project_assignment[student][project].varValue == 1:
-                student.assigned_project = project.name
-                project.assigned_students.append(student)
-                project.assigned_lab = student.lab
-                project.team_capacity = base_team_size
+    # 9) Extract assignments back onto Student & Project objects
+    for s in students:
+        sk = stu_map[s]
+        for p in projects:
+            pk = proj_map[p]
+            val = x[sk][pk].varValue
+            # skip unassigned or None values
+            if val is not None and val > 0.5:
+                s.assigned_project = p.name
+                p.assigned_students.append(s)
+                p.assigned_lab = s.lab
+                p.team_capacity = base_team_size
                 break
